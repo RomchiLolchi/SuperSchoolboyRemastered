@@ -1,4 +1,4 @@
-package com.easyeducation.superschoolboyremastered.ui.theme
+package com.oftatech.superschoolboyremastered.ui.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes

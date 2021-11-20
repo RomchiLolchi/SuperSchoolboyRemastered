@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">SuperSchoolboy Remastered</string>
+
+    <string name="welcome_to_text">Welcome to</string>
+    <string name="superschoolboy_text">SuperSchoolboy</string>
+    <string name="remastered_text">Remastered</string>
+    <string name="better_version_text">more convinient, simple and light\n than it’s previous version</string>
+    <string name="log_in_with_google_play_games_text">Log in with Google Play Games</string>
+    <string name="continue_without_linking_text">Continue without linking</string>
+
+    <!-- Content description text resources -->
+    <string name="app_icon_text">App icon</string>
 </resources>

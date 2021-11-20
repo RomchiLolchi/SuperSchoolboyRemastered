@@ -1,4 +1,4 @@
-package com.easyeducation.superschoolboyremastered
+package com.oftatech.superschoolboyremastered
 
 import org.junit.Test
 
