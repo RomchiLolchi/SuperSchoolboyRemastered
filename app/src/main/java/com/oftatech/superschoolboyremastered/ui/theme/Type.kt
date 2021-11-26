@@ -13,6 +13,8 @@ val robotoFontFamily = FontFamily(
     Font(R.font.roboto, FontWeight.Normal, FontStyle.Normal),
     Font(R.font.roboto_bold, FontWeight.Bold, FontStyle.Normal),
     Font(R.font.roboto_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.roboto_light, FontWeight.Light, FontStyle.Normal),
+    Font(R.font.roboto_thin, FontWeight.Thin, FontStyle.Normal),
 )
 
 val Typography = Typography(
@@ -51,6 +53,6 @@ val Typography = Typography(
     caption = TextStyle(
         fontFamily = FontFamily.Default,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp
+        fontSize = 14.sp,
     )
 )

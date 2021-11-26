@@ -48,7 +48,6 @@ fun SuperSchoolboyRemasteredTheme(
     }
 
     //TODO Поменять background цвета
-    //TODO Придумать что сделать с автоматическим затемнением цветов при включённой тёмной теме
     MaterialTheme(
         colors = colors,
         typography = Typography,

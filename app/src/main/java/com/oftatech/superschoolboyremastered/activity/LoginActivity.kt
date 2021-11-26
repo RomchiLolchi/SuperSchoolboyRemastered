@@ -1,5 +1,8 @@
 package com.oftatech.superschoolboyremastered.activity
 
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -43,6 +47,8 @@ class LoginActivity : ComponentActivity() {
 @Preview
 @Composable
 private fun LoginActivityScreenContent() {
+    val activity = LocalContext.current as Activity
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.SpaceEvenly,
@@ -90,7 +96,7 @@ private fun LoginActivityScreenContent() {
                     .fillMaxWidth(),
                 text = stringResource(id = R.string.log_in_with_google_play_games_text),
             ) {
-
+                activity.onBackPressed()
             }
             Spacer(modifier = Modifier.height(16.dp))
             SecondaryTextButton(
@@ -98,7 +104,7 @@ private fun LoginActivityScreenContent() {
                     .fillMaxWidth(),
                 text = stringResource(id = R.string.continue_without_linking_text),
             ) {
-
+                activity.onBackPressed()
             }
         }
     }
