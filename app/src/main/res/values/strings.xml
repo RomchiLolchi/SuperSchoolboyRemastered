@@ -8,6 +8,21 @@
     <string name="log_in_with_google_play_games_text">Log in with Google Play Games</string>
     <string name="continue_without_linking_text">Continue without linking</string>
 
+    <string name="edit_training_session_settings_text">Edit training session settings</string>
+    <string name="start_training_text">Start training</string>
+    <string name="you_can_start_training_now_text">You can start\ntraining right now</string>
+
+    <!-- Drawer tabs' texts -->
+    <string name="training_text">Training</string>
+    <string name="statistics_text">Statistics</string>
+    <string name="info_for_adults">Information for adults</string>
+    <string name="info_for_kids">Information for kids</string>
+    <string name="about_app">About app</string>
+
     <!-- Content description text resources -->
     <string name="app_icon_text">App icon</string>
+    <string name="menu_text">Menu</string>
+    <string name="settings_text">Settings</string>
+    <string name="user_avatar_text">User\'s avatar</string>
+    <string name="drawer_tab_icon_text">drawer tab icon</string>
 </resources>

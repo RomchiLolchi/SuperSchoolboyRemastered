@@ -5,35 +5,32 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.*
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oftatech.superschoolboyremastered.R
+import com.oftatech.superschoolboyremastered.ui.DrawerTab
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
+import com.oftatech.superschoolboyremastered.ui.ProfileDrawerTab
 import com.oftatech.superschoolboyremastered.ui.theme.MainAppContent
-import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import kotlinx.coroutines.launch
 
@@ -72,11 +69,14 @@ private fun MainActivityScreenContent() {
             ) {
                 Image(modifier = Modifier
                     .padding(start = 16.dp)
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
                         coroutineScope.launch {
                             scaffoldState.drawerState.open()
                         }
-                    }, painter = painterResource(id = R.drawable.ic_baseline_menu_24), contentDescription = "menu")
+                    }, imageVector = Icons.Outlined.Menu, contentDescription = stringResource(id = R.string.menu_text))
             }
         },
         drawerContent = {
@@ -94,26 +94,25 @@ private fun MainActivityScreenContent() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            //TODO Внести все фразы в strings.xml
-            //TODO Настроить drawer (открытие, его дизайн)
             Text(
                 modifier = Modifier
                     .weight(1f, fill = false)
                     .padding(bottom = 105.dp),
-                text = "You can start\ntraining right now",
+                text = stringResource(id = R.string.you_can_start_training_now_text),
                 style = MaterialTheme.typography.h2.copy(fontWeight = FontWeight.Normal),
                 color = MaterialTheme.colors.onBackground,
                 textAlign = TextAlign.Center
             )
             PrimaryTextButton(modifier = Modifier
                 .width(254.dp)
-                .padding(bottom = 107.dp), text = "Start Training".toUpperCase()) {
+                .padding(bottom = 107.dp), text = stringResource(id = R.string.start_training_text).uppercase()
+            ) {
 
             }
             Row {
-                Image(imageVector = Icons.Outlined.Settings, contentDescription = "Settings")
+                Image(imageVector = Icons.Outlined.Settings, contentDescription = stringResource(id = R.string.settings_text))
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(modifier = Modifier.alpha(0.6F), text = "Edit training session settings", fontSize = 18.sp)
+                Text(modifier = Modifier.alpha(0.6F), text = stringResource(id = R.string.edit_training_session_settings_text), fontSize = 18.sp)
             }
         }
     }
@@ -128,52 +127,11 @@ private fun MainActivityDrawerContent() {
         horizontalAlignment = Alignment.Start
     ) {
         ProfileDrawerTab()
+        DrawerTab(sectionName = stringResource(id = R.string.training_text), icon = Icons.Outlined.FitnessCenter)
+        DrawerTab(sectionName = stringResource(id = R.string.settings_text), icon = Icons.Outlined.Settings)
+        DrawerTab(sectionName = stringResource(id = R.string.statistics_text), icon = Icons.Outlined.Analytics)
+        DrawerTab(sectionName = stringResource(id = R.string.info_for_adults), icon = Icons.Outlined.EscalatorWarning)
+        DrawerTab(sectionName = stringResource(id = R.string.info_for_kids), icon = Icons.Outlined.ChildCare)
+        DrawerTab(sectionName = stringResource(id = R.string.about_app), icon = Icons.Outlined.Info)
     }
-}
-
-@Composable
-private fun ProfileDrawerTab() {
-    //TODO Добавить параметры вместо placeholder'ов
-    Column(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(top = 17.dp, bottom = 17.dp, start = 17.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                modifier = Modifier
-                    .padding(end = 14.dp)
-                    .size(80.dp)
-                    .clip(CircleShape),
-                painter = painterResource(id = R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
-                contentDescription = "User's avatar",
-                contentScale = ContentScale.Crop,
-            )
-
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.Start,
-            ) {
-                Text(text = "romchi_lolchi", fontFamily = robotoFontFamily, fontWeight = FontWeight.Light, fontStyle = FontStyle.Normal, fontSize = 28.sp)
-                Text(modifier = Modifier.padding(top = 7.dp), text = "rank: grandmaster", fontFamily = robotoFontFamily, fontWeight = FontWeight.Thin, fontStyle = FontStyle.Normal, fontSize = 18.sp)
-            }
-        }
-        Divider(
-            modifier = Modifier
-                .fillMaxWidth(),
-            color = MaterialTheme.colors.secondary,
-            thickness = 3.dp
-        )
-    }
-}
-
-@Composable
-private fun DrawerTab() {
-    //TODO Добавить параметры
 }
