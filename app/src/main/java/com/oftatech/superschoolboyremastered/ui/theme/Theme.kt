@@ -52,6 +52,6 @@ fun SuperSchoolboyRemasteredTheme(
         colors = colors,
         typography = Typography,
         shapes = Shapes,
-        content = content
+        content = content,
     )
 }

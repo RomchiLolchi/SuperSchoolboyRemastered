@@ -12,6 +12,9 @@
     <string name="start_training_text">Start training</string>
     <string name="you_can_start_training_now_text">You can start\ntraining right now</string>
 
+    <string name="exit_text">Exit</string>
+    <string name="submit_text">Submit</string>
+
     <!-- Drawer tabs' texts -->
     <string name="training_text">Training</string>
     <string name="statistics_text">Statistics</string>
@@ -25,4 +28,9 @@
     <string name="settings_text">Settings</string>
     <string name="user_avatar_text">User\'s avatar</string>
     <string name="drawer_tab_icon_text">drawer tab icon</string>
+    <string name="title_activity_training">TrainingActivity</string>
+    <string name="back_text">Back</string>
+    <string name="time_left_text">Time left icon</string>
+    <string name="done_right_text">Done right icon</string>
+    <string name="done_incorrect_text">Done incorrect icon</string>
 </resources>

@@ -1,5 +1,7 @@
 package com.oftatech.superschoolboyremastered.activity
 
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -41,6 +44,7 @@ class MainActivity : ComponentActivity() {
             MainAppContent {
                 appSetup()
                 MainActivityScreenContent()
+                //TODO Реализовать проверку на установку последней версии!!! (Firebase)
             }
         }
 
@@ -54,11 +58,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainActivityScreenContent() {
+private fun MainActivityScreenContent(
+    modifier: Modifier = Modifier,
+) {
+    val activity = LocalContext.current as Activity
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             Row(
                 modifier = Modifier
@@ -76,7 +84,10 @@ private fun MainActivityScreenContent() {
                         coroutineScope.launch {
                             scaffoldState.drawerState.open()
                         }
-                    }, imageVector = Icons.Outlined.Menu, contentDescription = stringResource(id = R.string.menu_text))
+                    },
+                    imageVector = Icons.Outlined.Menu,
+                    contentDescription = stringResource(id = R.string.menu_text),
+                )
             }
         },
         drawerContent = {
@@ -103,35 +114,65 @@ private fun MainActivityScreenContent() {
                 color = MaterialTheme.colors.onBackground,
                 textAlign = TextAlign.Center
             )
-            PrimaryTextButton(modifier = Modifier
-                .width(254.dp)
-                .padding(bottom = 107.dp), text = stringResource(id = R.string.start_training_text).uppercase()
+            PrimaryTextButton(
+                modifier = Modifier
+                    .width(254.dp)
+                    .padding(bottom = 107.dp),
+                text = stringResource(id = R.string.start_training_text).uppercase()
             ) {
-
+                openTrainingActivity(activity)
             }
             Row {
-                Image(imageVector = Icons.Outlined.Settings, contentDescription = stringResource(id = R.string.settings_text))
+                Image(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(id = R.string.settings_text)
+                )
                 Spacer(modifier = Modifier.width(10.dp))
-                Text(modifier = Modifier.alpha(0.6F), text = stringResource(id = R.string.edit_training_session_settings_text), fontSize = 18.sp)
+                Text(
+                    modifier = Modifier.alpha(0.6F),
+                    text = stringResource(id = R.string.edit_training_session_settings_text),
+                    fontSize = 18.sp
+                )
             }
         }
     }
 }
 
+private fun openTrainingActivity(context: Context) {
+    context.startActivity(Intent(context, TrainingActivity::class.java))
+}
+
 @Composable
-private fun MainActivityDrawerContent() {
+private fun MainActivityDrawerContent(
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
         ProfileDrawerTab()
-        DrawerTab(sectionName = stringResource(id = R.string.training_text), icon = Icons.Outlined.FitnessCenter)
-        DrawerTab(sectionName = stringResource(id = R.string.settings_text), icon = Icons.Outlined.Settings)
-        DrawerTab(sectionName = stringResource(id = R.string.statistics_text), icon = Icons.Outlined.Analytics)
-        DrawerTab(sectionName = stringResource(id = R.string.info_for_adults), icon = Icons.Outlined.EscalatorWarning)
-        DrawerTab(sectionName = stringResource(id = R.string.info_for_kids), icon = Icons.Outlined.ChildCare)
+        DrawerTab(
+            sectionName = stringResource(id = R.string.training_text),
+            icon = Icons.Outlined.FitnessCenter
+        )
+        DrawerTab(
+            sectionName = stringResource(id = R.string.settings_text),
+            icon = Icons.Outlined.Settings
+        )
+        DrawerTab(
+            sectionName = stringResource(id = R.string.statistics_text),
+            icon = Icons.Outlined.Analytics
+        )
+        DrawerTab(
+            sectionName = stringResource(id = R.string.info_for_adults),
+            icon = Icons.Outlined.EscalatorWarning
+        )
+        DrawerTab(
+            sectionName = stringResource(id = R.string.info_for_kids),
+            icon = Icons.Outlined.ChildCare
+        )
         DrawerTab(sectionName = stringResource(id = R.string.about_app), icon = Icons.Outlined.Info)
     }
 }

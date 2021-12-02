@@ -5,7 +5,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
-import androidx.compose.material.R
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,43 +16,60 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oftatech.superschoolboyremastered.ui.theme.Silver
 import com.oftatech.superschoolboyremastered.ui.theme.White
 import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
+import com.oftatech.superschoolboyremastered.R
 
 @Composable
-fun PrimaryTextButton(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
+fun PrimaryTextButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    textSize: TextUnit = 16.sp,
+    textVerticalPadding: Dp = 20.dp,
+    onClick: () -> Unit,
+) {
     Button(
         modifier = modifier,
         onClick = { onClick() },
         colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary, disabledBackgroundColor = Silver, disabledContentColor = White),
         contentPadding = PaddingValues(0.dp),
+        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp),
     ) {
-        Text(modifier = Modifier.padding(vertical = 20.dp, horizontal = 17.dp), text = text)
+        Text(modifier = Modifier.padding(vertical = textVerticalPadding, horizontal = 17.dp), text = text, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = textSize)
     }
 }
 
 @Composable
-fun SecondaryTextButton(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
+fun SecondaryTextButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    textSize: TextUnit = 16.sp,
+    onClick: () -> Unit,
+) {
     Button(
         modifier = modifier,
         onClick = { onClick() },
         colors = ButtonDefaults.buttonColors(backgroundColor = Color.Transparent),
         contentPadding = PaddingValues(0.dp),
         border = BorderStroke(3.dp, MaterialTheme.colors.secondary),
-        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp)
+        elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp),
     ) {
-        Text(modifier = Modifier.padding(vertical = 20.dp, horizontal = 17.dp), text = text, color = Silver)
+        Text(modifier = Modifier.padding(vertical = 20.dp, horizontal = 17.dp), text = text, color = Silver, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = textSize)
     }
 }
 
 @Composable
-fun ProfileDrawerTab() {
+fun ProfileDrawerTab(
+    modifier: Modifier = Modifier,
+) {
     //TODO Добавить параметры вместо placeholder'ов
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -69,8 +85,8 @@ fun ProfileDrawerTab() {
                     .padding(end = 14.dp)
                     .size(80.dp)
                     .clip(CircleShape),
-                painter = painterResource(id = com.oftatech.superschoolboyremastered.R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
-                contentDescription = stringResource(id = com.oftatech.superschoolboyremastered.R.string.user_avatar_text),
+                painter = painterResource(id = R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
+                contentDescription = stringResource(id = R.string.user_avatar_text),
                 contentScale = ContentScale.Crop,
             )
 
@@ -92,9 +108,13 @@ fun ProfileDrawerTab() {
 }
 
 @Composable
-fun DrawerTab(sectionName: String, icon: ImageVector) {
+fun DrawerTab(
+    modifier: Modifier = Modifier,
+    sectionName: String,
+    icon: ImageVector,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(50.dp),
         horizontalAlignment = Alignment.Start,
@@ -111,7 +131,7 @@ fun DrawerTab(sectionName: String, icon: ImageVector) {
                     .padding(end = 10.dp)
                     .size(22.dp),
                 imageVector = icon,
-                contentDescription = "$sectionName ${stringResource(id = com.oftatech.superschoolboyremastered.R.string.drawer_tab_icon_text)}",
+                contentDescription = "$sectionName ${stringResource(id = R.string.drawer_tab_icon_text)}",
             )
             Text(
                 text = sectionName,
