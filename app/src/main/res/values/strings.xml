@@ -15,6 +15,21 @@
     <string name="exit_text">Exit</string>
     <string name="submit_text">Submit</string>
 
+    <string name="app_theming_text">App theming</string>
+    <string name="ui_theme_text">UI Theme</string>
+    <string name="light_text">Light</string>
+    <string name="dark_text">Dark</string>
+    <string name="system_text">System</string>
+    <string name="accent_color_text">Accent color</string>
+    <string name="green_text">Green</string>
+    <string name="orange_text">Orange</string>
+    <string name="pink_text">Pink</string>
+    <string name="bonus_system_text">Bonus system</string>
+    <string name="getting_rank_text">Getting rank</string>
+    <string name="getting_achievements_text">Getting achievements</string>
+    <string name="on_text">On</string>
+    <string name="off_text">Off</string>
+
     <!-- Drawer tabs' texts -->
     <string name="training_text">Training</string>
     <string name="statistics_text">Statistics</string>

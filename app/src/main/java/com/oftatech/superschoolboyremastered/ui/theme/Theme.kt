@@ -6,6 +6,7 @@ import androidx.compose.material.Surface
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
 private val DarkColorPalette = darkColors(
     primary = White,
@@ -25,9 +26,11 @@ private val LightColorPalette = lightColors(
 
 @Composable
 fun MainAppContent(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    accentColor: Color,
     content: @Composable () -> Unit,
 ) {
-    SuperSchoolboyRemasteredTheme {
+    SuperSchoolboyRemasteredTheme(darkTheme = darkTheme, accentColor = accentColor) {
         Surface(
             color = MaterialTheme.colors.background,
         ) {
@@ -39,12 +42,13 @@ fun MainAppContent(
 @Composable
 fun SuperSchoolboyRemasteredTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    accentColor: Color,
     content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) {
-        DarkColorPalette
+        DarkColorPalette.copy(secondary = accentColor)
     } else {
-        LightColorPalette
+        LightColorPalette.copy(secondary = accentColor)
     }
 
     //TODO Поменять background цвета

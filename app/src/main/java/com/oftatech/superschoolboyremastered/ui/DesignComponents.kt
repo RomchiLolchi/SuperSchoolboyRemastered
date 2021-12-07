@@ -2,10 +2,13 @@ package com.oftatech.superschoolboyremastered.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,6 +27,7 @@ import com.oftatech.superschoolboyremastered.ui.theme.Silver
 import com.oftatech.superschoolboyremastered.ui.theme.White
 import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
 import com.oftatech.superschoolboyremastered.R
+import com.oftatech.superschoolboyremastered.activity.UIState
 
 @Composable
 fun PrimaryTextButton(
@@ -36,11 +40,22 @@ fun PrimaryTextButton(
     Button(
         modifier = modifier,
         onClick = { onClick() },
-        colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.secondary, disabledBackgroundColor = Silver, disabledContentColor = White),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = MaterialTheme.colors.secondary,
+            disabledBackgroundColor = Silver,
+            disabledContentColor = White
+        ),
         contentPadding = PaddingValues(0.dp),
         elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp),
     ) {
-        Text(modifier = Modifier.padding(vertical = textVerticalPadding, horizontal = 17.dp), text = text, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = textSize)
+        Text(
+            modifier = Modifier.padding(vertical = textVerticalPadding, horizontal = 17.dp),
+            text = text,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+            fontSize = textSize
+        )
     }
 }
 
@@ -59,7 +74,70 @@ fun SecondaryTextButton(
         border = BorderStroke(3.dp, MaterialTheme.colors.secondary),
         elevation = ButtonDefaults.elevation(0.dp, 0.dp, 0.dp),
     ) {
-        Text(modifier = Modifier.padding(vertical = 20.dp, horizontal = 17.dp), text = text, color = Silver, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = textSize)
+        Text(
+            modifier = Modifier.padding(vertical = 20.dp, horizontal = 17.dp),
+            text = text,
+            color = Silver,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+            fontSize = textSize
+        )
+    }
+}
+
+@Composable
+fun WindowHeader(
+    modifier: Modifier = Modifier,
+    text: String,
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        fontFamily = robotoFontFamily,
+        fontWeight = FontWeight.Bold,
+        fontStyle = FontStyle.Normal,
+        fontSize = 48.sp,
+    )
+}
+
+@Composable
+fun TextRadioButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    isSelected: Boolean,
+    actionOnClick: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                actionOnClick()
+            },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        RadioButton(
+            selected = isSelected,
+            onClick = actionOnClick,
+        )
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            modifier = Modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    actionOnClick()
+                },
+            text = text,
+            fontFamily = robotoFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+        )
     }
 }
 
@@ -94,8 +172,21 @@ fun ProfileDrawerTab(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start,
             ) {
-                Text(text = "romchi_lolchi", fontFamily = robotoFontFamily, fontWeight = FontWeight.Light, fontStyle = FontStyle.Normal, fontSize = 28.sp)
-                Text(modifier = Modifier.padding(top = 7.dp), text = "rank: grandmaster", fontFamily = robotoFontFamily, fontWeight = FontWeight.Thin, fontStyle = FontStyle.Normal, fontSize = 18.sp)
+                Text(
+                    text = "romchi_lolchi",
+                    fontFamily = robotoFontFamily,
+                    fontWeight = FontWeight.Light,
+                    fontStyle = FontStyle.Normal,
+                    fontSize = 28.sp
+                )
+                Text(
+                    modifier = Modifier.padding(top = 7.dp),
+                    text = "rank: grandmaster",
+                    fontFamily = robotoFontFamily,
+                    fontWeight = FontWeight.Thin,
+                    fontStyle = FontStyle.Normal,
+                    fontSize = 18.sp
+                )
             }
         }
         Divider(

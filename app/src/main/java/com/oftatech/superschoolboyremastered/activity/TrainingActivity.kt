@@ -37,7 +37,7 @@ class TrainingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainAppContent {
+            MainAppContent(accentColor = MaterialTheme.colors.secondary) {
                 appSetup()
                 TrainingActivityContent()
             }

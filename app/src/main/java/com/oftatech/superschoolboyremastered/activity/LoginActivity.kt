@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
+import com.oftatech.superschoolboyremastered.ui.theme.Madang
 import com.oftatech.superschoolboyremastered.ui.theme.MainAppContent
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 
@@ -36,7 +37,7 @@ class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MainAppContent {
+            MainAppContent(accentColor = MaterialTheme.colors.secondary) {
                 appSetup()
                 LoginActivityScreenContent()
             }
