@@ -30,6 +30,8 @@
     <string name="on_text">On</string>
     <string name="off_text">Off</string>
 
+    <string name="empty_so_far_text">So far it\'s empty…</string>
+
     <!-- Drawer tabs' texts -->
     <string name="training_text">Training</string>
     <string name="statistics_text">Statistics</string>

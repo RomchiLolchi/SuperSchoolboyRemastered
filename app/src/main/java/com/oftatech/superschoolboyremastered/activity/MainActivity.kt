@@ -178,7 +178,19 @@ private fun MainActivityScreenContent(
                     onAchievementsActiveChange = onAchievementsActiveChange
                 )
             }
-            composable(Screen.Statistics.route) { TODO() }
+            composable(Screen.Statistics.route) {
+                Column(
+                    modifier = modifier
+                        .padding(paddingValues)
+                        .fillMaxSize(),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Top,
+                ) {
+                    WindowHeader(modifier = Modifier.padding(start = 13.dp), text = stringResource(id = R.string.statistics_text))
+                    Spacer(modifier = Modifier.height(30.dp))
+                    PlugScreen()
+                }
+            }
             composable(Screen.AdultInfo.route) { TODO() }
             composable(Screen.KidsInfo.route) { TODO() }
             composable(Screen.AboutApp.route) { TODO() }
@@ -285,13 +297,22 @@ private fun SettingsScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            TextRadioButton(text = stringResource(id = R.string.green_text), isSelected = accentColor == Madang) {
+                            TextRadioButton(
+                                text = stringResource(id = R.string.green_text),
+                                isSelected = accentColor == Madang
+                            ) {
                                 onAccentColorChange(Madang)
                             }
-                            TextRadioButton(text = stringResource(id = R.string.orange_text), isSelected = accentColor == Tacao) {
+                            TextRadioButton(
+                                text = stringResource(id = R.string.orange_text),
+                                isSelected = accentColor == Tacao
+                            ) {
                                 onAccentColorChange(Tacao)
                             }
-                            TextRadioButton(text = stringResource(id = R.string.pink_text), isSelected = accentColor == WePeep) {
+                            TextRadioButton(
+                                text = stringResource(id = R.string.pink_text),
+                                isSelected = accentColor == WePeep
+                            ) {
                                 onAccentColorChange(WePeep)
                             }
                         }
@@ -303,10 +324,17 @@ private fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Start
                             ) {
-                                TextRadioButton(text = stringResource(id = R.string.on_text), isSelected = isRankActive) {
+                                TextRadioButton(
+                                    text = stringResource(id = R.string.on_text),
+                                    isSelected = isRankActive
+                                ) {
                                     onRankActiveChange(true)
                                 }
-                                TextRadioButton(modifier = Modifier.weight(1f), text = stringResource(id = R.string.off_text), isSelected = !isRankActive) {
+                                TextRadioButton(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.off_text),
+                                    isSelected = !isRankActive
+                                ) {
                                     onRankActiveChange(false)
                                 }
                             }
@@ -317,10 +345,17 @@ private fun SettingsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Start
                             ) {
-                                TextRadioButton(text = stringResource(id = R.string.on_text), isSelected = isAchievementsActive) {
+                                TextRadioButton(
+                                    text = stringResource(id = R.string.on_text),
+                                    isSelected = isAchievementsActive
+                                ) {
                                     onAchievementsActiveChange(true)
                                 }
-                                TextRadioButton(modifier = Modifier.weight(1f), text = stringResource(id = R.string.off_text), isSelected = !isAchievementsActive) {
+                                TextRadioButton(
+                                    modifier = Modifier.weight(1f),
+                                    text = stringResource(id = R.string.off_text),
+                                    isSelected = !isAchievementsActive
+                                ) {
                                     onAchievementsActiveChange(false)
                                 }
                             }
@@ -384,6 +419,26 @@ private fun SettingsPart(
         )
         Spacer(modifier = Modifier.height(20.dp))
         content()
+    }
+}
+
+@Composable
+private fun PlugScreen(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            modifier = Modifier.alpha(0.6F),
+            text = stringResource(id = R.string.empty_so_far_text),
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+            fontSize = 19.sp
+        )
     }
 }
 
