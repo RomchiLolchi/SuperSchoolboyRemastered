@@ -8,10 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
@@ -191,9 +190,18 @@ private fun MainActivityScreenContent(
                     PlugScreen()
                 }
             }
-            composable(Screen.AdultInfo.route) { TODO() }
-            composable(Screen.KidsInfo.route) { TODO() }
-            composable(Screen.AboutApp.route) { TODO() }
+            composable(Screen.AdultInfo.route) { TextScreen(
+                header = stringResource(id = R.string.info_for_adults),
+                text = stringResource(id = R.string.adult_info_content)
+            ) }
+            composable(Screen.KidsInfo.route) { TextScreen(
+                header = stringResource(id = R.string.info_for_kids),
+                text = stringResource(id = R.string.kids_info_content)
+            ) }
+            composable(Screen.AboutApp.route) { TextScreen(
+                header = stringResource(id = R.string.about_app),
+                text = stringResource(id = R.string.about_app_content)
+            ) }
         }
     }
 }
@@ -439,6 +447,27 @@ private fun PlugScreen(
             fontStyle = FontStyle.Normal,
             fontSize = 19.sp
         )
+    }
+}
+
+@Composable
+private fun TextScreen(
+    modifier: Modifier = Modifier,
+    header: String,
+    text: String,
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 13.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        WindowHeader(text = header)
+        Spacer(modifier = Modifier.height(30.dp))
+        Text(modifier = Modifier.verticalScroll(scrollState), text = text, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = 19.sp)
     }
 }
 
