@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "287770323567",
+    "project_id": "superschoolboy-remastered",
+    "storage_bucket": "superschoolboy-remastered.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:287770323567:android:9dda1f6d79d91e60cdbb9a",
+        "android_client_info": {
+          "package_name": "com.oftatech.superschoolboyremastered"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "287770323567-mfio30haan7kl9ahi9ucbe22v21tbqpp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAg7YMkJsvILnUDazFcFUn3mfNqF-xh84"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "287770323567-mfio30haan7kl9ahi9ucbe22v21tbqpp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
