@@ -6,10 +6,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +17,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,46 +39,37 @@ import androidx.navigation.compose.rememberNavController
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.*
 import com.oftatech.superschoolboyremastered.ui.theme.*
+import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            val uiThemeState: MutableState<UIState> =
-                remember { mutableStateOf(UIState.SystemSettings) }
-            //TODO Придумать что сделать с изначальным цветом (заменить его на зелёный по умолчанию в темах сразу)
-            val currentAccentColor = MaterialTheme.colors.secondary
-            val accentColor: MutableState<Color> = remember { mutableStateOf(currentAccentColor) }
-            val isRankActive = remember { mutableStateOf(true) }
-            val isAchievementsActive = remember { mutableStateOf(true) }
 
+        val viewModel by viewModels<MainViewModel>()
+        setContent {
             MainAppContent(
-                darkTheme = when (uiThemeState.value) {
-                    UIState.LightTheme -> false
-                    UIState.DarkTheme -> true
-                    UIState.SystemSettings -> isSystemInDarkTheme()
-                }, accentColor = animateColorAsState(targetValue = accentColor.value).value
+                darkTheme = Utils.isDarkTheme(viewModel.appTheme.observeAsState().value!!),
+                accentColor = animateColorAsState(targetValue = viewModel.accentColor.observeAsState().value!!).value
             ) {
                 appSetup()
 
                 MainActivityScreenContent(
-                    uiThemeState = uiThemeState.value,
-                    onUIThemeStateChange = { uiThemeState.value = it },
-                    accentColor = accentColor.value,
-                    onAccentColorChange = { accentColor.value = it },
-                    isRankActive = isRankActive.value,
-                    onRankActiveChange = { isRankActive.value = it },
-                    isAchievementsActive = isAchievementsActive.value,
-                    onAchievementsActiveChange = { isAchievementsActive.value = it })
+                    uiThemeState = viewModel.appTheme.observeAsState().value!!,
+                    onUIThemeStateChange = { viewModel.appTheme.value = it },
+                    accentColor = viewModel.accentColor.observeAsState().value!!
+                ) { viewModel.accentColor.value = it }
                 //TODO Реализовать проверку на установку последней версии!!! (Firebase)
             }
         }
 
-        //TODO Убрать заглушку и переписать по нормальному
-        if (intent.getBooleanExtra("TEST", true)) {
+        if (viewModel.firstOpen.value!!) {
+            viewModel.firstOpen.value = false
             startActivity(Intent(this, LoginActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             })
@@ -92,10 +84,6 @@ private fun MainActivityScreenContent(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
-    isRankActive: Boolean,
-    onRankActiveChange: (Boolean) -> Unit,
-    isAchievementsActive: Boolean,
-    onAchievementsActiveChange: (Boolean) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -170,11 +158,7 @@ private fun MainActivityScreenContent(
                     uiThemeState = uiThemeState,
                     onUIThemeStateChange = onUIThemeStateChange,
                     accentColor = accentColor,
-                    onAccentColorChange = onAccentColorChange,
-                    isRankActive = isRankActive,
-                    onRankActiveChange = onRankActiveChange,
-                    isAchievementsActive = isAchievementsActive,
-                    onAchievementsActiveChange = onAchievementsActiveChange
+                    onAccentColorChange = onAccentColorChange
                 )
             }
             composable(Screen.Statistics.route) {
@@ -185,23 +169,32 @@ private fun MainActivityScreenContent(
                     horizontalAlignment = Alignment.Start,
                     verticalArrangement = Arrangement.Top,
                 ) {
-                    WindowHeader(modifier = Modifier.padding(start = 13.dp), text = stringResource(id = R.string.statistics_text))
+                    WindowHeader(
+                        modifier = Modifier.padding(start = 13.dp),
+                        text = stringResource(id = R.string.statistics_text)
+                    )
                     Spacer(modifier = Modifier.height(30.dp))
                     PlugScreen()
                 }
             }
-            composable(Screen.AdultInfo.route) { TextScreen(
-                header = stringResource(id = R.string.info_for_adults),
-                text = stringResource(id = R.string.adult_info_content)
-            ) }
-            composable(Screen.KidsInfo.route) { TextScreen(
-                header = stringResource(id = R.string.info_for_kids),
-                text = stringResource(id = R.string.kids_info_content)
-            ) }
-            composable(Screen.AboutApp.route) { TextScreen(
-                header = stringResource(id = R.string.about_app),
-                text = stringResource(id = R.string.about_app_content)
-            ) }
+            composable(Screen.AdultInfo.route) {
+                TextScreen(
+                    header = stringResource(id = R.string.info_for_adults),
+                    text = stringResource(id = R.string.adult_info_content)
+                )
+            }
+            composable(Screen.KidsInfo.route) {
+                TextScreen(
+                    header = stringResource(id = R.string.info_for_kids),
+                    text = stringResource(id = R.string.kids_info_content)
+                )
+            }
+            composable(Screen.AboutApp.route) {
+                TextScreen(
+                    header = stringResource(id = R.string.about_app),
+                    text = stringResource(id = R.string.about_app_content)
+                )
+            }
         }
     }
 }
@@ -235,7 +228,10 @@ private fun TrainingScreen(
         ) {
             openTrainingActivity(activity)
         }
-        Row {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Image(
                 imageVector = Icons.Outlined.Settings,
                 contentDescription = stringResource(id = R.string.settings_text)
@@ -257,10 +253,6 @@ private fun SettingsScreen(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
-    isRankActive: Boolean,
-    onRankActiveChange: (Boolean) -> Unit,
-    isAchievementsActive: Boolean,
-    onAchievementsActiveChange: (Boolean) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -325,50 +317,6 @@ private fun SettingsScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(30.dp))
-                    SettingsBigPart(partName = stringResource(id = R.string.bonus_system_text)) {
-                        SettingsPart(partName = stringResource(id = R.string.getting_rank_text)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                TextRadioButton(
-                                    text = stringResource(id = R.string.on_text),
-                                    isSelected = isRankActive
-                                ) {
-                                    onRankActiveChange(true)
-                                }
-                                TextRadioButton(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.off_text),
-                                    isSelected = !isRankActive
-                                ) {
-                                    onRankActiveChange(false)
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        SettingsPart(partName = stringResource(id = R.string.getting_achievements_text)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                TextRadioButton(
-                                    text = stringResource(id = R.string.on_text),
-                                    isSelected = isAchievementsActive
-                                ) {
-                                    onAchievementsActiveChange(true)
-                                }
-                                TextRadioButton(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.off_text),
-                                    isSelected = !isAchievementsActive
-                                ) {
-                                    onAchievementsActiveChange(false)
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -376,6 +324,17 @@ private fun SettingsScreen(
 }
 
 sealed class UIState(private val stringRepresentation: String) : Serializable {
+    companion object {
+        fun valueOf(stringRepresentation: String): UIState {
+            return when (stringRepresentation) {
+                "light" -> LightTheme
+                "dark" -> DarkTheme
+                "system" -> SystemSettings
+                else -> throw IllegalArgumentException("In UIState class there is no such string representation: $stringRepresentation!")
+            }
+        }
+    }
+
     object LightTheme : UIState("light")
     object DarkTheme : UIState("dark")
     object SystemSettings : UIState("system")
@@ -467,7 +426,14 @@ private fun TextScreen(
     ) {
         WindowHeader(text = header)
         Spacer(modifier = Modifier.height(30.dp))
-        Text(modifier = Modifier.verticalScroll(scrollState), text = text, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = 19.sp)
+        Text(
+            modifier = Modifier.verticalScroll(scrollState),
+            text = text,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+            fontSize = 19.sp
+        )
     }
 }
 
