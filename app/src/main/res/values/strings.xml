@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">SuperSchoolboy Remastered</string>
+    <string name="app_name" translatable="false">SuperSchoolboy Remastered</string>
 
     <string name="welcome_to_text">Welcome to</string>
-    <string name="superschoolboy_text">SuperSchoolboy</string>
-    <string name="remastered_text">Remastered</string>
-    <string name="better_version_text">more convinient, simple and light\n than it’s previous version</string>
+    <string name="superschoolboy_text" translatable="false">SuperSchoolboy</string>
+    <string name="remastered_text" translatable="false">Remastered</string>
+    <string name="better_version_text">more convinient, simple and light\nthan it’s previous version</string>
     <string name="log_in_with_google_play_games_text">Log in with Google Play Games</string>
     <string name="continue_without_linking_text">Continue without linking</string>
 
@@ -70,7 +70,6 @@
     <string name="settings_text">Settings</string>
     <string name="user_avatar_text">User\'s avatar</string>
     <string name="drawer_tab_icon_text">drawer tab icon</string>
-    <string name="title_activity_training">TrainingActivity</string>
     <string name="back_text">Back</string>
     <string name="time_left_text">Time left icon</string>
     <string name="done_right_text">Done right icon</string>

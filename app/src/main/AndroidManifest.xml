@@ -13,7 +13,6 @@
         <activity
             android:name=".activity.TrainingActivity"
             android:exported="false"
-            android:label="@string/title_activity_training"
             android:theme="@style/Theme.SuperSchoolboyRemastered.NoActionBar" />
         <activity
             android:name=".activity.LoginActivity"
