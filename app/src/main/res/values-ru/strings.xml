@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="welcome_to_text">Приветствуем Вас в</string>
     <string name="better_version_text">более удобном, простом и лёгком,\nчем его предыдущая версия</string>
     <string name="log_in_with_google_play_games_text">Войти с Google Play Games</string>

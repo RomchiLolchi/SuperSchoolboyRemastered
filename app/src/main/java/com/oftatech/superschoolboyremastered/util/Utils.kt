@@ -13,6 +13,8 @@ import androidx.compose.ui.platform.LocalContext
 import com.oftatech.superschoolboyremastered.activity.UIState
 
 object Utils {
+    const val REMOTE_CONFIG_ADS_KEY = "ads"
+
     @SuppressLint("ComposableNaming")
     @Composable
     fun appSetup() {

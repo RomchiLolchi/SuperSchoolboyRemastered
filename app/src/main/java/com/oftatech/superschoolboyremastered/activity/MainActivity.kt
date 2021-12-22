@@ -36,6 +36,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.*
 import com.oftatech.superschoolboyremastered.ui.theme.*
@@ -76,6 +78,8 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+
 
 @Composable
 private fun MainActivityScreenContent(
@@ -205,42 +209,54 @@ private fun TrainingScreen(
 ) {
     val activity = LocalContext.current as Activity
 
-    Column(
+    Box (
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(bottom = 105.dp),
-            text = stringResource(id = R.string.you_can_start_training_now_text),
-            style = MaterialTheme.typography.h2.copy(fontWeight = FontWeight.Normal),
-            color = MaterialTheme.colors.onBackground,
-            textAlign = TextAlign.Center
-        )
-        PrimaryTextButton(
-            modifier = Modifier
-                .width(254.dp)
-                .padding(bottom = 107.dp),
-            text = stringResource(id = R.string.start_training_text).uppercase()
+        Column(
+            modifier = modifier
+                .align(Alignment.Center),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            openTrainingActivity(activity)
-        }
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Image(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(id = R.string.settings_text)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                modifier = Modifier.alpha(0.6F),
-                text = stringResource(id = R.string.edit_training_session_settings_text),
-                fontSize = 18.sp
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .padding(bottom = 105.dp),
+                text = stringResource(id = R.string.you_can_start_training_now_text),
+                style = MaterialTheme.typography.h2.copy(fontWeight = FontWeight.Normal),
+                color = MaterialTheme.colors.onBackground,
+                textAlign = TextAlign.Center
+            )
+            PrimaryTextButton(
+                modifier = Modifier
+                    .width(254.dp)
+                    .padding(bottom = 107.dp),
+                text = stringResource(id = R.string.start_training_text).uppercase()
+            ) {
+                openTrainingActivity(activity)
+            }
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Image(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(id = R.string.settings_text)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    modifier = Modifier.alpha(0.6F),
+                    text = stringResource(id = R.string.edit_training_session_settings_text),
+                    fontSize = 18.sp
+                )
+            }
+        }
+
+        if (Firebase.remoteConfig.getBoolean(Utils.REMOTE_CONFIG_ADS_KEY)) {
+            FullWidthAdaptiveBannerAds(
+                modifier = modifier
+                    .align(Alignment.BottomCenter),
             )
         }
     }
