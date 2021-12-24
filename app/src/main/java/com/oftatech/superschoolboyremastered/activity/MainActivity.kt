@@ -3,7 +3,13 @@ package com.oftatech.superschoolboyremastered.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.Html
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.util.TypedValue
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -31,6 +37,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -43,6 +51,7 @@ import com.oftatech.superschoolboyremastered.ui.*
 import com.oftatech.superschoolboyremastered.ui.theme.*
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -184,19 +193,19 @@ private fun MainActivityScreenContent(
             composable(Screen.AdultInfo.route) {
                 TextScreen(
                     header = stringResource(id = R.string.info_for_adults),
-                    text = stringResource(id = R.string.adult_info_content)
+                    text = Html.fromHtml(stringResource(id = R.string.adult_info_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
                 )
             }
             composable(Screen.KidsInfo.route) {
                 TextScreen(
                     header = stringResource(id = R.string.info_for_kids),
-                    text = stringResource(id = R.string.kids_info_content)
+                    text = Html.fromHtml(stringResource(id = R.string.kids_info_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
                 )
             }
             composable(Screen.AboutApp.route) {
                 TextScreen(
                     header = stringResource(id = R.string.about_app),
-                    text = stringResource(id = R.string.about_app_content)
+                    text = Html.fromHtml(stringResource(id = R.string.about_app_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
                 )
             }
         }
@@ -280,7 +289,6 @@ private fun SettingsScreen(
         Spacer(modifier = Modifier.height(30.dp))
         LazyColumn {
             item {
-                //TODO Переписать логику по нормальному, с разделением "обязанностей"
                 SettingsBigPart(partName = stringResource(id = R.string.app_theming_text)) {
                     SettingsPart(partName = stringResource(id = R.string.ui_theme_text)) {
                         Row(
@@ -429,9 +437,25 @@ private fun PlugScreen(
 private fun TextScreen(
     modifier: Modifier = Modifier,
     header: String,
-    text: String,
+    text: Spanned,
 ) {
     val scrollState = rememberScrollState()
+    val onBackground = MaterialTheme.colors.onBackground.toOldColor()
+    val textLinksColor = MaterialTheme.colors.secondary.toOldColor()
+
+    val states = arrayOf(
+        intArrayOf(android.R.attr.state_enabled),
+        intArrayOf(-android.R.attr.state_enabled),
+        intArrayOf(-android.R.attr.state_checked),
+        intArrayOf(android.R.attr.state_pressed)
+    )
+    val colors = intArrayOf(
+        textLinksColor,
+        textLinksColor,
+        textLinksColor,
+        textLinksColor
+    )
+
 
     Column(
         modifier = modifier
@@ -442,14 +466,17 @@ private fun TextScreen(
     ) {
         WindowHeader(text = header)
         Spacer(modifier = Modifier.height(30.dp))
-        Text(
-            modifier = Modifier.verticalScroll(scrollState),
-            text = text,
-            fontFamily = robotoFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontStyle = FontStyle.Normal,
-            fontSize = 19.sp
-        )
+        AndroidView(modifier = Modifier.verticalScroll(scrollState),
+            factory = {
+            TextView(it).apply {
+                setText(text)
+                setTextColor(onBackground)
+                typeface = ResourcesCompat.getFont(it, R.font.roboto)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 19F)
+                movementMethod = LinkMovementMethod.getInstance()
+                setLinkTextColor(ColorStateList(states, colors))
+            }
+        })
     }
 }
 

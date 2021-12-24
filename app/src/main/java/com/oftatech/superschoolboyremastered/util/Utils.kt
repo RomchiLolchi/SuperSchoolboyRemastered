@@ -18,7 +18,6 @@ object Utils {
     @SuppressLint("ComposableNaming")
     @Composable
     fun appSetup() {
-        //TODO Здесь обновлять secondary color
         SetStatusBarColorFromComposeColor(color = MaterialTheme.colors.background)
         SetAndroidNavigationBarBarColorFromComposeColor(color = MaterialTheme.colors.background)
     }
@@ -26,17 +25,15 @@ object Utils {
     @Composable
     fun SetStatusBarColorFromComposeColor(color: Color) {
         val activity = LocalContext.current as ComponentActivity
-        activity.window.statusBarColor =
-            android.graphics.Color.argb(color.alpha, color.red, color.green, color.blue)
+        activity.window.statusBarColor = color.toOldColor()
     }
 
     @Composable
     fun SetAndroidNavigationBarBarColorFromComposeColor(color: Color) {
         val activity = LocalContext.current as ComponentActivity
-        val androidColor = android.graphics.Color.argb(color.alpha, color.red, color.green, color.blue)
-        activity.window.navigationBarColor = androidColor
+        activity.window.navigationBarColor = color.toOldColor()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            activity.window.navigationBarDividerColor = androidColor
+            activity.window.navigationBarDividerColor = color.toOldColor()
         }
     }
 
@@ -48,4 +45,7 @@ object Utils {
             UIState.SystemSettings -> isSystemInDarkTheme()
         }
     }
+
+    @Composable
+    fun Color.toOldColor(): Int = android.graphics.Color.argb(this.alpha, this.red, this.green, this.blue)
 }
