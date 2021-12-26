@@ -37,12 +37,12 @@ class StatisticsViewModel @Inject constructor(private val spDao: StatisticsSPDao
 
     fun updateStatsData() {
         absoluteRightAnswersInRow.value = spDao.readAbsoluteRightAnswersInRow()
-        absoluteAverageResponseTime.value = spDao.readAbsoluteAverageResponseTime()
+        absoluteAverageResponseTime.value = if (spDao.readAbsoluteAverageResponseTime().isNaN()) 0F else spDao.readAbsoluteAverageResponseTime()
         lsTimer.value = spDao.readLsTimer()
         lsRightAnswers.value = spDao.readLsRightAnswers()
         lsWrongAnswers.value = spDao.readLsWrongAnswers()
         lsRightAnswersInRow.value = spDao.readLsRightAnswersInRow()
-        lsAverageResponseTime.value = spDao.readLsAverageResponseTime()
+        lsAverageResponseTime.value = if (spDao.readLsAverageResponseTime().isNaN()) 0F else spDao.readLsAverageResponseTime()
     }
 
     fun isEmpty(): Boolean {
