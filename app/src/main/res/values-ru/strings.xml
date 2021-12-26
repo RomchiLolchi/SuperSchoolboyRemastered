@@ -80,9 +80,15 @@
         v0.1pr
     </string>
     <string name="back_text">Назад</string>
-    <string name="time_left_text">Времени осталось</string>
-    <string name="done_right_text">Иконка правильных ответов</string>
-    <string name="done_incorrect_text">Иконка неправильных ответов</string>
+    <string name="timer_text">Таймер</string>
+    <string name="right_answers_text">Правильные ответы</string>
+    <string name="wrong_answers_text">Неправильные ответы</string>
     <string name="user_avatar_text">Аватар пользователя</string>
     <string name="drawer_tab_icon_text">Иконка выдвижной панели</string>
+    <string name="sec_text">с</string>
+    <string name="last_session_text">Последняя сессия</string>
+    <string name="maximum_number_of_unmistakable_answers_in_a_row_text">Максимальное количество безошибочных ответов подряд</string>
+    <string name="average_response_time_text">Среднее время на ответ</string>
+    <string name="absolute_text">Абсолютная</string>
+    <string name="minimal_average_response_time_text">Минимальное среднее время на ответ</string>
 </resources>

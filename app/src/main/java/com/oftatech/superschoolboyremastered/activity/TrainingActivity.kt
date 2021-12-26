@@ -26,7 +26,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
@@ -35,13 +37,15 @@ import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.TrainingViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class TrainingActivity : ComponentActivity() {
 
-    val trainingViewModel by viewModels<TrainingViewModel>()
+    private val trainingViewModel by viewModels<TrainingViewModel>()
+    private val statsViewModel by viewModels<StatisticsViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,8 +83,9 @@ class TrainingActivity : ComponentActivity() {
 
     //TODO Сделать диалог при нажатии кнопки назад
     override fun onBackPressed() {
-        super.onBackPressed()
         trainingViewModel.stop()
+        statsViewModel.writeStatsData(trainingViewModel)
+        super.onBackPressed()
     }
 }
 
@@ -242,7 +247,7 @@ private fun StatsBar(
                     modifier = Modifier.size(23.dp),
                     imageVector = Icons.Outlined.Schedule,
                     contentDescription = stringResource(
-                        id = R.string.time_left_text
+                        id = R.string.timer_text
                     )
                 )
                 Spacer(modifier = Modifier.width(7.dp))
@@ -264,7 +269,7 @@ private fun StatsBar(
                     modifier = Modifier.size(23.dp),
                     imageVector = Icons.Outlined.Done,
                     contentDescription = stringResource(
-                        id = R.string.done_right_text
+                        id = R.string.right_answers_text
                     )
                 )
                 Spacer(modifier = Modifier.width(7.dp))
@@ -286,7 +291,7 @@ private fun StatsBar(
                     modifier = Modifier.size(23.dp),
                     imageVector = Icons.Outlined.Close,
                     contentDescription = stringResource(
-                        id = R.string.done_incorrect_text
+                        id = R.string.wrong_answers_text
                     )
                 )
                 Spacer(modifier = Modifier.width(7.dp))

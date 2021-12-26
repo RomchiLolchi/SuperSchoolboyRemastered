@@ -15,4 +15,9 @@ class DaoProviders {
     fun provideMainDAO(@ApplicationContext context: Context): MainSPDao {
         return MainSPDao(context)
     }
+
+    @Provides
+    fun provideStatisticsDao(@ApplicationContext context: Context): StatisticsSPDao {
+        return StatisticsSPDao(context)
+    }
 }

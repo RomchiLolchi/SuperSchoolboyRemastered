@@ -79,6 +79,13 @@
         v0.1pr
     </string>
 
+    <string name="absolute_text">Absolute</string>
+    <string name="maximum_number_of_unmistakable_answers_in_a_row_text">Maximum number\nof unmistakable\nanswers in a row</string>
+    <string name="average_response_time_text">Average response time</string>
+    <string name="minimal_average_response_time_text">Minimal average response time</string>
+    <string name="sec_text">s</string>
+    <string name="last_session_text">Last session</string>
+
     <!-- Drawer tabs' texts -->
     <string name="training_text">Training</string>
     <string name="statistics_text">Statistics</string>
@@ -93,7 +100,7 @@
     <string name="user_avatar_text">User\'s avatar</string>
     <string name="drawer_tab_icon_text">drawer tab icon</string>
     <string name="back_text">Back</string>
-    <string name="time_left_text">Time left icon</string>
-    <string name="done_right_text">Done right icon</string>
-    <string name="done_incorrect_text">Done incorrect icon</string>
+    <string name="timer_text">Timer</string>
+    <string name="right_answers_text">Right answers</string>
+    <string name="wrong_answers_text">Wrong answers</string>
 </resources>

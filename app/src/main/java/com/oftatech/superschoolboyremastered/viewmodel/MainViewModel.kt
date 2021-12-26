@@ -10,9 +10,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(private val spDao: MainSPDao) : ViewModel() {
-    var appTheme = MutableLiveData<UIState>(UIState.SystemSettings)
-    var accentColor = MutableLiveData(Madang)
-    var firstOpen = MutableLiveData(true)
+    val appTheme = MutableLiveData<UIState>(UIState.SystemSettings)
+    val accentColor = MutableLiveData(Madang)
+    val firstOpen = MutableLiveData(true)
 
     init {
         updateSettingsData()

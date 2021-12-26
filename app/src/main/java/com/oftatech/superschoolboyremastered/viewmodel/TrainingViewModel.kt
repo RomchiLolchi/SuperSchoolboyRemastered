@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.*
 import javax.inject.Inject
+import kotlin.collections.ArrayList
 import kotlin.concurrent.schedule
 import kotlin.concurrent.timer
 import kotlin.concurrent.timerTask
@@ -13,8 +14,11 @@ import kotlin.concurrent.timerTask
 class TrainingViewModel @Inject constructor() : ViewModel() {
     var maximumTime = 50
     val rightAnswers = MutableLiveData(0)
+    val rightAnswersInRow = MutableLiveData(0)
+    private val allRightAnswersInRow = arrayListOf(0)
     val wrongAnswers = MutableLiveData(0)
     val timeLeft = MutableLiveData(maximumTime)
+    val responseTimes = ArrayList<Int>()
     val question = MutableLiveData("2x2")
     val userAnswer = MutableLiveData("")
     private var rightAnswer = 0
@@ -29,14 +33,25 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun checkAndAppend() {
+        responseTimes.add(maximumTime - timeLeft.value!!)
+
         val parsedUserAnswer = if (userAnswer.value != null && userAnswer.value!!.isNotBlank()) {
             userAnswer.value!!.toLong()
         } else {
             0
         }
 
-        if (parsedUserAnswer == rightAnswer.toLong()) rightAnswers.postValue(
-            rightAnswers.value!! + 1) else wrongAnswers.postValue(wrongAnswers.value!! + 1)
+        if (parsedUserAnswer == rightAnswer.toLong()) {
+            rightAnswers.postValue(rightAnswers.value!! + 1)
+            allRightAnswersInRow[allRightAnswersInRow.lastIndex] = allRightAnswersInRow.last() + 1
+        } else {
+            wrongAnswers.postValue(wrongAnswers.value!! + 1)
+            allRightAnswersInRow.add(0)
+        }
+    }
+
+    fun updateRightAnswersInRow() {
+        rightAnswersInRow.value = allRightAnswersInRow.maxOrNull() ?: 0
     }
 
     fun appendToUserAnswer(text: String) {
@@ -54,10 +69,10 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     }
 
     fun completeTask(check: Boolean = true) {
+        if (check) checkAndAppend()
         stop()
         clearUserAnswer()
         timeLeft.postValue(maximumTime)
-        if (check) checkAndAppend()
         generateQuestionAndAnswer()
         timer.schedule(timerTask {
             timeLeft.postValue(timeLeft.value!! - 1)

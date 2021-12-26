@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -53,6 +54,7 @@ import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
@@ -63,6 +65,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val viewModel by viewModels<MainViewModel>()
+        val statsViewModel by viewModels<StatisticsViewModel>()
         setContent {
             MainAppContent(
                 darkTheme = Utils.isDarkTheme(viewModel.appTheme.observeAsState().value!!),
@@ -73,9 +76,10 @@ class MainActivity : ComponentActivity() {
                 MainActivityScreenContent(
                     uiThemeState = viewModel.appTheme.observeAsState().value!!,
                     onUIThemeStateChange = { viewModel.appTheme.value = it },
-                    accentColor = viewModel.accentColor.observeAsState().value!!
-                ) { viewModel.accentColor.value = it }
-                //TODO Реализовать проверку на установку последней версии!!! (Firebase)
+                    accentColor = viewModel.accentColor.observeAsState().value!!,
+                    onAccentColorChange = { viewModel.accentColor.value = it },
+                    statsViewModel = statsViewModel,
+                )
             }
         }
 
@@ -88,8 +92,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
-
 @Composable
 private fun MainActivityScreenContent(
     modifier: Modifier = Modifier,
@@ -97,6 +99,7 @@ private fun MainActivityScreenContent(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
+    statsViewModel: StatisticsViewModel,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -175,20 +178,7 @@ private fun MainActivityScreenContent(
                 )
             }
             composable(Screen.Statistics.route) {
-                Column(
-                    modifier = modifier
-                        .padding(paddingValues)
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.Top,
-                ) {
-                    WindowHeader(
-                        modifier = Modifier.padding(start = 13.dp),
-                        text = stringResource(id = R.string.statistics_text)
-                    )
-                    Spacer(modifier = Modifier.height(30.dp))
-                    PlugScreen()
-                }
+                StatisticsScreen(modifier = Modifier.padding(paddingValues).padding(horizontal = 13.dp), statsViewModel = statsViewModel)
             }
             composable(Screen.AdultInfo.route) {
                 TextScreen(
@@ -410,6 +400,74 @@ private fun SettingsPart(
         )
         Spacer(modifier = Modifier.height(20.dp))
         content()
+    }
+}
+
+@Composable
+private fun StatisticsScreen(
+    modifier: Modifier = Modifier,
+    statsViewModel: StatisticsViewModel,
+) {
+    statsViewModel.updateStatsData()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        WindowHeader(
+            text = stringResource(id = R.string.statistics_text)
+        )
+        when(statsViewModel.isEmpty()) {
+            true -> PlugScreen()
+            false -> {
+                LazyColumn {
+                    item {
+                        Spacer(modifier = Modifier.height(30.dp))
+                        SettingsBigPart(partName = stringResource(id = R.string.absolute_text)) {
+                            StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.absoluteRightAnswersInRow.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.minimal_average_response_time_text), value = "${statsViewModel.absoluteAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}")
+                        }
+                        Spacer(modifier = Modifier.height(30.dp))
+                        SettingsBigPart(partName = stringResource(id = R.string.last_session_text)) {
+                            StatisticsField(text = stringResource(id = R.string.timer_text), value = "${statsViewModel.lsTimer.value.toString()}${stringResource(id = R.string.sec_text)}")
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.right_answers_text), value = statsViewModel.lsRightAnswers.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.wrong_answers_text), value = statsViewModel.lsWrongAnswers.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.lsRightAnswersInRow.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.average_response_time_text), value = "${statsViewModel.lsAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatisticsField(modifier: Modifier = Modifier, text: String, value: String) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Text(
+            modifier = Modifier.align(Alignment.CenterStart),
+            text = text,
+            fontSize = 19.sp,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+        )
+        Text(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            text = value,
+            fontSize = 24.sp,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontStyle = FontStyle.Normal,
+        )
     }
 }
 
