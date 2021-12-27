@@ -226,7 +226,7 @@ fun DrawerTab(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Image(
+            Icon(
                 modifier = Modifier
                     .padding(end = 10.dp)
                     .size(22.dp),

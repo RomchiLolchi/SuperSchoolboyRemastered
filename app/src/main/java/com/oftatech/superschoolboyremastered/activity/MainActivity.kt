@@ -3,6 +3,7 @@ package com.oftatech.superschoolboyremastered.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Html
@@ -19,6 +20,7 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
@@ -38,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -63,6 +66,7 @@ import java.io.Serializable
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         val viewModel by viewModels<MainViewModel>()
         val statsViewModel by viewModels<StatisticsViewModel>()
@@ -124,7 +128,7 @@ private fun MainActivityScreenContent(
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     modifier = Modifier
                         .padding(start = 16.dp)
                         .clickable(
@@ -239,9 +243,9 @@ private fun TrainingScreen(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     imageVector = Icons.Outlined.Settings,
-                    contentDescription = stringResource(id = R.string.settings_text)
+                    contentDescription = stringResource(id = R.string.settings_text),
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
@@ -566,14 +570,36 @@ private fun MainActivityDrawerContent(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        ProfileDrawerTab()
-        for (screen in screens) {
+        //ProfileDrawerTab()
+        /*for (screen in screens) {
+            DrawerTab(
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    navController.navigate(screen.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+
+                    coroutineScope.launch {
+                        drawerState.close()
+                    }
+                },
+                sectionName = stringResource(id = screen.drawerTextId),
+                icon = screen.drawerImage
+            )
+        }*/
+        itemsIndexed(screens) { index, screen ->
             DrawerTab(
                 modifier = Modifier.clickable(
                     interactionSource = remember { MutableInteractionSource() },

@@ -1,21 +1,21 @@
 package com.oftatech.superschoolboyremastered.activity
 
 import android.app.Activity
+import android.content.pm.ActivityInfo
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.icons.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Done
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.remember
@@ -26,9 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
@@ -49,6 +47,7 @@ class TrainingActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         val mainViewModel by viewModels<MainViewModel>()
         setContent {
@@ -115,7 +114,7 @@ private fun TrainingActivityContent(
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     modifier = Modifier
                         .padding(start = 16.dp)
                         .clickable(
@@ -243,7 +242,7 @@ private fun StatsBar(
                 /*modifier = Modifier.fillMaxWidth(),*/
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     modifier = Modifier.size(23.dp),
                     imageVector = Icons.Outlined.Schedule,
                     contentDescription = stringResource(
@@ -265,7 +264,7 @@ private fun StatsBar(
                 /*modifier = Modifier.fillMaxWidth(),*/
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     modifier = Modifier.size(23.dp),
                     imageVector = Icons.Outlined.Done,
                     contentDescription = stringResource(
@@ -287,7 +286,7 @@ private fun StatsBar(
                 /*modifier = Modifier.fillMaxWidth(),*/
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     modifier = Modifier.size(23.dp),
                     imageVector = Icons.Outlined.Close,
                     contentDescription = stringResource(
