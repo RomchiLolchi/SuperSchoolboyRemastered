@@ -24,7 +24,7 @@ class StatisticsSPDao(val context: Context) {
     }
 
     fun readAbsoluteAverageResponseTime(): Float {
-        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getFloat(ABSOLUTE_AVERAGE_RESPONSE_TIME_KEY, 0F)
+        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getFloat(ABSOLUTE_AVERAGE_RESPONSE_TIME_KEY, Float.NaN)
     }
 
     fun writeAbsoluteAverageResponseTime(newAbsoluteAverageResponseTime: Float) {
@@ -64,7 +64,7 @@ class StatisticsSPDao(val context: Context) {
     }
 
     fun readLsAverageResponseTime(): Float {
-        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getFloat(LS_AVERAGE_RESPONSE_TIME, 0F)
+        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getFloat(LS_AVERAGE_RESPONSE_TIME, Float.NaN)
     }
 
     fun writeLsAverageResponseTime(newLsAverageResponseTime: Float) {

@@ -80,7 +80,6 @@ class TrainingActivity : ComponentActivity() {
         }
     }
 
-    //TODO Сделать диалог при нажатии кнопки назад
     override fun onBackPressed() {
         trainingViewModel.stop()
         statsViewModel.writeStatsData(trainingViewModel)

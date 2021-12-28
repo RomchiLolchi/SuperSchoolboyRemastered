@@ -432,7 +432,8 @@ private fun StatisticsScreen(
                         SettingsBigPart(partName = stringResource(id = R.string.absolute_text)) {
                             StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.absoluteRightAnswersInRow.value.toString())
                             Spacer(modifier = Modifier.height(20.dp))
-                            StatisticsField(text = stringResource(id = R.string.minimal_average_response_time_text), value = "${statsViewModel.absoluteAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}")
+                            val mart = if (statsViewModel.absoluteAverageResponseTime.value!!.isNaN()) "-" else "${statsViewModel.absoluteAverageResponseTime.value}${stringResource(id = R.string.sec_text)}"
+                            StatisticsField(text = stringResource(id = R.string.minimal_average_response_time_text), value = mart)
                         }
                         Spacer(modifier = Modifier.height(30.dp))
                         SettingsBigPart(partName = stringResource(id = R.string.last_session_text)) {
@@ -444,7 +445,8 @@ private fun StatisticsScreen(
                             Spacer(modifier = Modifier.height(20.dp))
                             StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.lsRightAnswersInRow.value.toString())
                             Spacer(modifier = Modifier.height(20.dp))
-                            StatisticsField(text = stringResource(id = R.string.average_response_time_text), value = "${statsViewModel.lsAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}")
+                            val art = if (statsViewModel.lsAverageResponseTime.value!!.isNaN()) "-" else "${statsViewModel.lsAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}"
+                            StatisticsField(text = stringResource(id = R.string.average_response_time_text), value = art)
                         }
                     }
                 }
@@ -550,9 +552,7 @@ sealed class Screen(
     object Training : Screen("training", Icons.Outlined.FitnessCenter, R.string.training_text)
     object Settings : Screen("settings", Icons.Outlined.Settings, R.string.settings_text)
     object Statistics : Screen("stats", Icons.Outlined.Analytics, R.string.statistics_text)
-    object AdultInfo :
-        Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
-
+    object AdultInfo : Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
     object KidsInfo : Screen("kids_info", Icons.Outlined.ChildCare, R.string.info_for_kids)
     object AboutApp : Screen("app_info", Icons.Outlined.Info, R.string.about_app)
 }
@@ -577,28 +577,6 @@ private fun MainActivityDrawerContent(
         horizontalAlignment = Alignment.Start
     ) {
         //ProfileDrawerTab()
-        /*for (screen in screens) {
-            DrawerTab(
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    navController.navigate(screen.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-
-                    coroutineScope.launch {
-                        drawerState.close()
-                    }
-                },
-                sectionName = stringResource(id = screen.drawerTextId),
-                icon = screen.drawerImage
-            )
-        }*/
         itemsIndexed(screens) { index, screen ->
             DrawerTab(
                 modifier = Modifier.clickable(

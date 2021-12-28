@@ -154,7 +154,6 @@ fun TextRadioButton(
 fun ProfileDrawerTab(
     modifier: Modifier = Modifier,
 ) {
-    //TODO Добавить параметры вместо placeholder'ов
     Column(
         modifier = modifier
             .fillMaxWidth(),

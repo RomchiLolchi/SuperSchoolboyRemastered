@@ -19,7 +19,7 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     val wrongAnswers = MutableLiveData(0)
     val timeLeft = MutableLiveData(maximumTime)
     val responseTimes = ArrayList<Int>()
-    val question = MutableLiveData("2x2")
+    val question = MutableLiveData("")
     val userAnswer = MutableLiveData("")
     private var rightAnswer = 0
     private var timer = Timer(true)

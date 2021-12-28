@@ -9,7 +9,8 @@ import javax.inject.Inject
 @HiltViewModel
 class StatisticsViewModel @Inject constructor(private val spDao: StatisticsSPDao) : ViewModel() {
     val absoluteRightAnswersInRow = MutableLiveData(0)
-    val absoluteAverageResponseTime = MutableLiveData(0F)
+    val absoluteAverageResponseTime = MutableLiveData(Float.NaN)
+
     //ls = Last [Training] Session
     val lsTimer = MutableLiveData(0)
     val lsRightAnswers = MutableLiveData(0)
@@ -28,11 +29,11 @@ class StatisticsViewModel @Inject constructor(private val spDao: StatisticsSPDao
         lsWrongAnswers.value = trainingViewModel.wrongAnswers.value
         val averageResponseTime = trainingViewModel.responseTimes.average().toFloat()
         lsAverageResponseTime.value = averageResponseTime
-        absoluteAverageResponseTime.value = kotlin.math.min(absoluteAverageResponseTime.value ?: 0F, averageResponseTime)
+        absoluteAverageResponseTime.value = if (absoluteAverageResponseTime.value!!.isNaN()) averageResponseTime else kotlin.math.min(absoluteAverageResponseTime.value!!, averageResponseTime)
         trainingViewModel.updateRightAnswersInRow()
         val rightAnswersInRow = trainingViewModel.rightAnswersInRow.value
         lsRightAnswersInRow.value = rightAnswersInRow
-        absoluteRightAnswersInRow.value = kotlin.math.max(absoluteRightAnswersInRow.value ?: 0, rightAnswersInRow ?: 0)
+        absoluteRightAnswersInRow.value = kotlin.math.max(absoluteRightAnswersInRow.value!!, rightAnswersInRow!!)
     }
 
     fun updateStatsData() {
@@ -47,12 +48,12 @@ class StatisticsViewModel @Inject constructor(private val spDao: StatisticsSPDao
 
     fun isEmpty(): Boolean {
         return absoluteRightAnswersInRow.value == 0 &&
-        absoluteAverageResponseTime.value == 0F &&
-        lsTimer.value == 0 &&
-        lsRightAnswers.value == 0 &&
-        lsWrongAnswers.value == 0 &&
-        lsRightAnswersInRow.value == 0 &&
-        lsAverageResponseTime.value == 0F
+                absoluteAverageResponseTime.value!!.isNaN() &&
+                lsTimer.value == 0 &&
+                lsRightAnswers.value == 0 &&
+                lsWrongAnswers.value == 0 &&
+                lsRightAnswersInRow.value == 0 &&
+                lsAverageResponseTime.value!!.isNaN()
     }
 
     private fun configureDataAutosave() {

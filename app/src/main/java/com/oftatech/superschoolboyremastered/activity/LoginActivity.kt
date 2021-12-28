@@ -62,12 +62,11 @@ class LoginActivity : ComponentActivity() {
 private fun LoginActivityScreenContent() {
     val activity = LocalContext.current as Activity
 
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -91,9 +90,8 @@ private fun LoginActivityScreenContent() {
             )
         }
 
-        //TODO Центрировать лого
         Image(
-            modifier = Modifier.size(246.dp),
+            modifier = Modifier.size(246.dp).align(Alignment.Center),
             painter = painterResource(id = R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
             contentDescription = stringResource(id = R.string.app_icon_text),
             contentScale = ContentScale.FillBounds,
@@ -101,7 +99,9 @@ private fun LoginActivityScreenContent() {
 
         Column(
             modifier = Modifier
-                .width(IntrinsicSize.Max),
+                .width(IntrinsicSize.Max)
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             PrimaryTextButton(
