@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Супер Школяр Remastered</string>
     <string name="welcome_to_text">Приветствуем Вас в</string>
     <string name="better_version_text">более удобном, простом и лёгком,\nчем его предыдущая версия</string>
     <string name="log_in_with_google_play_games_text">Войти с Google Play Games</string>
@@ -87,8 +88,8 @@
     <string name="drawer_tab_icon_text">Иконка выдвижной панели</string>
     <string name="sec_text">с</string>
     <string name="last_session_text">Последняя сессия</string>
-    <string name="maximum_number_of_unmistakable_answers_in_a_row_text">Максимальное количество безошибочных ответов подряд</string>
+    <string name="maximum_number_of_unmistakable_answers_in_a_row_text">Максимальное количество\nбезошибочных ответов\nподряд</string>
     <string name="average_response_time_text">Среднее время на ответ</string>
     <string name="absolute_text">Абсолютная</string>
-    <string name="minimal_average_response_time_text">Минимальное среднее время на ответ</string>
+    <string name="minimal_average_response_time_text">Минимальное среднее\nвремя на ответ</string>
 </resources>

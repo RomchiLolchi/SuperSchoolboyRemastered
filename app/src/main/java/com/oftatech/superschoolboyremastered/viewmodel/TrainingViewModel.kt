@@ -36,7 +36,12 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
         responseTimes.add(maximumTime - timeLeft.value!!)
 
         val parsedUserAnswer = if (userAnswer.value != null && userAnswer.value!!.isNotBlank()) {
-            userAnswer.value!!.toLong()
+            try {
+                userAnswer.value!!.toLong()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                0
+            }
         } else {
             0
         }
@@ -55,7 +60,13 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     }
 
     fun appendToUserAnswer(text: String) {
-        userAnswer.postValue(userAnswer.value + text)
+        if (userAnswer.value!! == "0" && text != "0") {
+            userAnswer.postValue(text)
+        } else {
+            if (userAnswer.value != "0" || text != "0") {
+                userAnswer.postValue(userAnswer.value + text)
+            }
+        }
     }
 
     fun clearLastUserAnswerSymbol() {

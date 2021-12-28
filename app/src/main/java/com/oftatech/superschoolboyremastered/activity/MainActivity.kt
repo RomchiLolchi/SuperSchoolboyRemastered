@@ -48,6 +48,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.oftatech.superschoolboyremastered.R
@@ -558,6 +559,7 @@ sealed class Screen(
 }
 
 private fun openTrainingActivity(context: Context) {
+    FirebaseAnalytics.getInstance(context).logEvent("training_session_start", null)
     context.startActivity(Intent(context, TrainingActivity::class.java))
 }
 
