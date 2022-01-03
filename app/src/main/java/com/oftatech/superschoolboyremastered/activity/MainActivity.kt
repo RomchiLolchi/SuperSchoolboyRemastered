@@ -3,20 +3,29 @@ package com.oftatech.superschoolboyremastered.activity
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.res.ColorStateList
 import android.os.Bundle
+import android.text.Html
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.util.TypedValue
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -30,54 +39,57 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
+import androidx.core.content.res.ResourcesCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.*
 import com.oftatech.superschoolboyremastered.ui.theme.*
+import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
+import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            val uiThemeState: MutableState<UIState> =
-                remember { mutableStateOf(UIState.SystemSettings) }
-            //TODO Придумать что сделать с изначальным цветом (заменить его на зелёный по умолчанию в темах сразу)
-            val currentAccentColor = MaterialTheme.colors.secondary
-            val accentColor: MutableState<Color> = remember { mutableStateOf(currentAccentColor) }
-            val isRankActive = remember { mutableStateOf(true) }
-            val isAchievementsActive = remember { mutableStateOf(true) }
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
+        val viewModel by viewModels<MainViewModel>()
+        val statsViewModel by viewModels<StatisticsViewModel>()
+        setContent {
             MainAppContent(
-                darkTheme = when (uiThemeState.value) {
-                    UIState.LightTheme -> false
-                    UIState.DarkTheme -> true
-                    UIState.SystemSettings -> isSystemInDarkTheme()
-                }, accentColor = animateColorAsState(targetValue = accentColor.value).value
+                darkTheme = Utils.isDarkTheme(viewModel.appTheme.observeAsState().value!!),
+                accentColor = animateColorAsState(targetValue = viewModel.accentColor.observeAsState().value!!).value
             ) {
                 appSetup()
 
                 MainActivityScreenContent(
-                    uiThemeState = uiThemeState.value,
-                    onUIThemeStateChange = { uiThemeState.value = it },
-                    accentColor = accentColor.value,
-                    onAccentColorChange = { accentColor.value = it },
-                    isRankActive = isRankActive.value,
-                    onRankActiveChange = { isRankActive.value = it },
-                    isAchievementsActive = isAchievementsActive.value,
-                    onAchievementsActiveChange = { isAchievementsActive.value = it })
-                //TODO Реализовать проверку на установку последней версии!!! (Firebase)
+                    uiThemeState = viewModel.appTheme.observeAsState().value!!,
+                    onUIThemeStateChange = { viewModel.appTheme.value = it },
+                    accentColor = viewModel.accentColor.observeAsState().value!!,
+                    onAccentColorChange = { viewModel.accentColor.value = it },
+                    statsViewModel = statsViewModel,
+                )
             }
         }
 
-        //TODO Убрать заглушку и переписать по нормальному
-        if (intent.getBooleanExtra("TEST", true)) {
+        if (viewModel.firstOpen.value!!) {
+            viewModel.firstOpen.value = false
             startActivity(Intent(this, LoginActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             })
@@ -92,10 +104,7 @@ private fun MainActivityScreenContent(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
-    isRankActive: Boolean,
-    onRankActiveChange: (Boolean) -> Unit,
-    isAchievementsActive: Boolean,
-    onAchievementsActiveChange: (Boolean) -> Unit,
+    statsViewModel: StatisticsViewModel,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -120,7 +129,7 @@ private fun MainActivityScreenContent(
                 horizontalArrangement = Arrangement.Start,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Image(
+                Icon(
                     modifier = Modifier
                         .padding(start = 16.dp)
                         .clickable(
@@ -170,38 +179,30 @@ private fun MainActivityScreenContent(
                     uiThemeState = uiThemeState,
                     onUIThemeStateChange = onUIThemeStateChange,
                     accentColor = accentColor,
-                    onAccentColorChange = onAccentColorChange,
-                    isRankActive = isRankActive,
-                    onRankActiveChange = onRankActiveChange,
-                    isAchievementsActive = isAchievementsActive,
-                    onAchievementsActiveChange = onAchievementsActiveChange
+                    onAccentColorChange = onAccentColorChange
                 )
             }
             composable(Screen.Statistics.route) {
-                Column(
-                    modifier = modifier
-                        .padding(paddingValues)
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.Top,
-                ) {
-                    WindowHeader(modifier = Modifier.padding(start = 13.dp), text = stringResource(id = R.string.statistics_text))
-                    Spacer(modifier = Modifier.height(30.dp))
-                    PlugScreen()
-                }
+                StatisticsScreen(modifier = Modifier.padding(paddingValues).padding(horizontal = 13.dp), statsViewModel = statsViewModel)
             }
-            composable(Screen.AdultInfo.route) { TextScreen(
-                header = stringResource(id = R.string.info_for_adults),
-                text = stringResource(id = R.string.adult_info_content)
-            ) }
-            composable(Screen.KidsInfo.route) { TextScreen(
-                header = stringResource(id = R.string.info_for_kids),
-                text = stringResource(id = R.string.kids_info_content)
-            ) }
-            composable(Screen.AboutApp.route) { TextScreen(
-                header = stringResource(id = R.string.about_app),
-                text = stringResource(id = R.string.about_app_content)
-            ) }
+            composable(Screen.AdultInfo.route) {
+                TextScreen(
+                    header = stringResource(id = R.string.info_for_adults),
+                    text = Html.fromHtml(stringResource(id = R.string.adult_info_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
+                )
+            }
+            composable(Screen.KidsInfo.route) {
+                TextScreen(
+                    header = stringResource(id = R.string.info_for_kids),
+                    text = Html.fromHtml(stringResource(id = R.string.kids_info_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
+                )
+            }
+            composable(Screen.AboutApp.route) {
+                TextScreen(
+                    header = stringResource(id = R.string.about_app),
+                    text = Html.fromHtml(stringResource(id = R.string.about_app_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
+                )
+            }
         }
     }
 }
@@ -212,39 +213,54 @@ private fun TrainingScreen(
 ) {
     val activity = LocalContext.current as Activity
 
-    Column(
+    Box (
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(
-            modifier = Modifier
-                .weight(1f, fill = false)
-                .padding(bottom = 105.dp),
-            text = stringResource(id = R.string.you_can_start_training_now_text),
-            style = MaterialTheme.typography.h2.copy(fontWeight = FontWeight.Normal),
-            color = MaterialTheme.colors.onBackground,
-            textAlign = TextAlign.Center
-        )
-        PrimaryTextButton(
-            modifier = Modifier
-                .width(254.dp)
-                .padding(bottom = 107.dp),
-            text = stringResource(id = R.string.start_training_text).uppercase()
+        Column(
+            modifier = modifier
+                .align(Alignment.Center),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            openTrainingActivity(activity)
-        }
-        Row {
-            Image(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = stringResource(id = R.string.settings_text)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                modifier = Modifier.alpha(0.6F),
-                text = stringResource(id = R.string.edit_training_session_settings_text),
-                fontSize = 18.sp
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .padding(bottom = 105.dp),
+                text = stringResource(id = R.string.you_can_start_training_now_text),
+                style = MaterialTheme.typography.h2.copy(fontWeight = FontWeight.Normal),
+                color = MaterialTheme.colors.onBackground,
+                textAlign = TextAlign.Center
+            )
+            PrimaryTextButton(
+                modifier = Modifier
+                    .width(254.dp)
+                    .padding(bottom = 107.dp),
+                text = stringResource(id = R.string.start_training_text).uppercase()
+            ) {
+                openTrainingActivity(activity)
+            }
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(id = R.string.settings_text),
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    modifier = Modifier.alpha(0.6F),
+                    text = stringResource(id = R.string.edit_training_session_settings_text),
+                    fontSize = 18.sp
+                )
+            }
+        }
+
+        if (Firebase.remoteConfig.getBoolean(Utils.REMOTE_CONFIG_ADS_KEY)) {
+            FullWidthAdaptiveBannerAds(
+                modifier = modifier
+                    .align(Alignment.BottomCenter),
             )
         }
     }
@@ -257,10 +273,6 @@ private fun SettingsScreen(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
-    isRankActive: Boolean,
-    onRankActiveChange: (Boolean) -> Unit,
-    isAchievementsActive: Boolean,
-    onAchievementsActiveChange: (Boolean) -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -272,7 +284,6 @@ private fun SettingsScreen(
         Spacer(modifier = Modifier.height(30.dp))
         LazyColumn {
             item {
-                //TODO Переписать логику по нормальному, с разделением "обязанностей"
                 SettingsBigPart(partName = stringResource(id = R.string.app_theming_text)) {
                     SettingsPart(partName = stringResource(id = R.string.ui_theme_text)) {
                         Row(
@@ -325,50 +336,6 @@ private fun SettingsScreen(
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(30.dp))
-                    SettingsBigPart(partName = stringResource(id = R.string.bonus_system_text)) {
-                        SettingsPart(partName = stringResource(id = R.string.getting_rank_text)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                TextRadioButton(
-                                    text = stringResource(id = R.string.on_text),
-                                    isSelected = isRankActive
-                                ) {
-                                    onRankActiveChange(true)
-                                }
-                                TextRadioButton(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.off_text),
-                                    isSelected = !isRankActive
-                                ) {
-                                    onRankActiveChange(false)
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(20.dp))
-                        SettingsPart(partName = stringResource(id = R.string.getting_achievements_text)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                TextRadioButton(
-                                    text = stringResource(id = R.string.on_text),
-                                    isSelected = isAchievementsActive
-                                ) {
-                                    onAchievementsActiveChange(true)
-                                }
-                                TextRadioButton(
-                                    modifier = Modifier.weight(1f),
-                                    text = stringResource(id = R.string.off_text),
-                                    isSelected = !isAchievementsActive
-                                ) {
-                                    onAchievementsActiveChange(false)
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -376,6 +343,17 @@ private fun SettingsScreen(
 }
 
 sealed class UIState(private val stringRepresentation: String) : Serializable {
+    companion object {
+        fun valueOf(stringRepresentation: String): UIState {
+            return when (stringRepresentation) {
+                "light" -> LightTheme
+                "dark" -> DarkTheme
+                "system" -> SystemSettings
+                else -> throw IllegalArgumentException("In UIState class there is no such string representation: $stringRepresentation!")
+            }
+        }
+    }
+
     object LightTheme : UIState("light")
     object DarkTheme : UIState("dark")
     object SystemSettings : UIState("system")
@@ -431,6 +409,76 @@ private fun SettingsPart(
 }
 
 @Composable
+private fun StatisticsScreen(
+    modifier: Modifier = Modifier,
+    statsViewModel: StatisticsViewModel,
+) {
+    statsViewModel.updateStatsData()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize(),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top,
+    ) {
+        WindowHeader(
+            text = stringResource(id = R.string.statistics_text)
+        )
+        when(statsViewModel.isEmpty()) {
+            true -> PlugScreen()
+            false -> {
+                LazyColumn {
+                    item {
+                        Spacer(modifier = Modifier.height(30.dp))
+                        SettingsBigPart(partName = stringResource(id = R.string.absolute_text)) {
+                            StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.absoluteRightAnswersInRow.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            val mart = if (statsViewModel.absoluteAverageResponseTime.value!!.isNaN()) "-" else "${statsViewModel.absoluteAverageResponseTime.value}${stringResource(id = R.string.sec_text)}"
+                            StatisticsField(text = stringResource(id = R.string.minimal_average_response_time_text), value = mart)
+                        }
+                        Spacer(modifier = Modifier.height(30.dp))
+                        SettingsBigPart(partName = stringResource(id = R.string.last_session_text)) {
+                            StatisticsField(text = stringResource(id = R.string.timer_text), value = "${statsViewModel.lsTimer.value.toString()}${stringResource(id = R.string.sec_text)}")
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.right_answers_text), value = statsViewModel.lsRightAnswers.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.wrong_answers_text), value = statsViewModel.lsWrongAnswers.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.lsRightAnswersInRow.value.toString())
+                            Spacer(modifier = Modifier.height(20.dp))
+                            val art = if (statsViewModel.lsAverageResponseTime.value!!.isNaN()) "-" else "${statsViewModel.lsAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}"
+                            StatisticsField(text = stringResource(id = R.string.average_response_time_text), value = art)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatisticsField(modifier: Modifier = Modifier, text: String, value: String) {
+    Box(modifier = modifier.fillMaxWidth()) {
+        Text(
+            modifier = Modifier.align(Alignment.CenterStart),
+            text = text,
+            fontSize = 19.sp,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+        )
+        Text(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            text = value,
+            fontSize = 24.sp,
+            fontFamily = robotoFontFamily,
+            fontWeight = FontWeight.Bold,
+            fontStyle = FontStyle.Normal,
+        )
+    }
+}
+
+@Composable
 private fun PlugScreen(
     modifier: Modifier = Modifier,
 ) {
@@ -454,9 +502,25 @@ private fun PlugScreen(
 private fun TextScreen(
     modifier: Modifier = Modifier,
     header: String,
-    text: String,
+    text: Spanned,
 ) {
     val scrollState = rememberScrollState()
+    val onBackground = MaterialTheme.colors.onBackground.toOldColor()
+    val textLinksColor = MaterialTheme.colors.secondary.toOldColor()
+
+    val states = arrayOf(
+        intArrayOf(android.R.attr.state_enabled),
+        intArrayOf(-android.R.attr.state_enabled),
+        intArrayOf(-android.R.attr.state_checked),
+        intArrayOf(android.R.attr.state_pressed)
+    )
+    val colors = intArrayOf(
+        textLinksColor,
+        textLinksColor,
+        textLinksColor,
+        textLinksColor
+    )
+
 
     Column(
         modifier = modifier
@@ -467,7 +531,17 @@ private fun TextScreen(
     ) {
         WindowHeader(text = header)
         Spacer(modifier = Modifier.height(30.dp))
-        Text(modifier = Modifier.verticalScroll(scrollState), text = text, fontFamily = robotoFontFamily, fontWeight = FontWeight.Normal, fontStyle = FontStyle.Normal, fontSize = 19.sp)
+        AndroidView(modifier = Modifier.verticalScroll(scrollState),
+            factory = {
+            TextView(it).apply {
+                setText(text)
+                setTextColor(onBackground)
+                typeface = ResourcesCompat.getFont(it, R.font.roboto)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 19F)
+                movementMethod = LinkMovementMethod.getInstance()
+                setLinkTextColor(ColorStateList(states, colors))
+            }
+        })
     }
 }
 
@@ -479,14 +553,13 @@ sealed class Screen(
     object Training : Screen("training", Icons.Outlined.FitnessCenter, R.string.training_text)
     object Settings : Screen("settings", Icons.Outlined.Settings, R.string.settings_text)
     object Statistics : Screen("stats", Icons.Outlined.Analytics, R.string.statistics_text)
-    object AdultInfo :
-        Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
-
+    object AdultInfo : Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
     object KidsInfo : Screen("kids_info", Icons.Outlined.ChildCare, R.string.info_for_kids)
     object AboutApp : Screen("app_info", Icons.Outlined.Info, R.string.about_app)
 }
 
 private fun openTrainingActivity(context: Context) {
+    FirebaseAnalytics.getInstance(context).logEvent("training_session_start", null)
     context.startActivity(Intent(context, TrainingActivity::class.java))
 }
 
@@ -499,14 +572,14 @@ private fun MainActivityDrawerContent(
 ) {
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
+    LazyColumn(
         modifier = modifier
             .fillMaxSize(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        ProfileDrawerTab()
-        for (screen in screens) {
+        //ProfileDrawerTab()
+        itemsIndexed(screens) { index, screen ->
             DrawerTab(
                 modifier = Modifier.clickable(
                     interactionSource = remember { MutableInteractionSource() },

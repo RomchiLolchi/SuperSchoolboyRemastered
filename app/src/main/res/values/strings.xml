@@ -1,10 +1,10 @@
 <resources>
-    <string name="app_name">SuperSchoolboy Remastered</string>
+    <string name="app_name">Super Schoolboy Remastered</string>
 
     <string name="welcome_to_text">Welcome to</string>
-    <string name="superschoolboy_text">SuperSchoolboy</string>
-    <string name="remastered_text">Remastered</string>
-    <string name="better_version_text">more convinient, simple and light\n than it’s previous version</string>
+    <string name="superschoolboy_text" translatable="false">SuperSchoolboy</string>
+    <string name="remastered_text" translatable="false">Remastered</string>
+    <string name="better_version_text">more convinient, simple and light\nthan it’s previous version</string>
     <string name="log_in_with_google_play_games_text">Log in with Google Play Games</string>
     <string name="continue_without_linking_text">Continue without linking</string>
 
@@ -32,30 +32,59 @@
 
     <string name="empty_so_far_text">So far it\'s empty…</string>
 
-    <string name="adult_info_content">Hello dear parents and teachers! I, Roman Popov, as the creator of this application, thank you for downloading it and I hope that its use will be convenient and effective for you, and will also cause only positive emotions.\n
-    If you find a bug (an error in the application) or you have an idea that you want to see here, you can contact me on Telegram / Instagram using the nickname @romchi_lolchi or by email - pri20051982@gmail.com.\n
-    \n
-    Also, I would like to leave a couple of tips so that children train and learn more effectively:\n
-    1. It is better to train a little, but often.\n
-    To do this, you can set the maximum time for one training session and the duration of the breaks in the settings. Also, in the same section of the application, you can turn on notifications about the desired start of a training.\n
-    2. Set aside a specific training time in your child\'s schedule.\n
-    This will help your child to develop a habit, as well as exercise systematically, which will allow your child to better remember and assimilate information\n
-    3. Turn on the achievement system in the application settings by linking your Google Play Games account</string>
+    <string name="adult_info_content">
+        Hello dear parents and teachers! I, Roman Popov, as the creator of this application, thank you for downloading it and I hope that its use will be convenient and effective for you, and will also cause only positive emotions.
+        &lt;br&gt;
+        &lt;br&gt;
+        If you find a bug (an error in the application) or you have an idea that you want to see here, you can contact me on Telegram / Instagram using the nickname &lt;a href="https://www.instagram.com/romchi_lolchi/"&gt;@romchi_lolchi&lt;/a&gt; or by email - &lt;a href="mailto:pri20051982@gmail.com?subject=SuperSchoolboy%20Remastered%20Feedback"&gt;pri20051982@gmail.com&lt;/a&gt;.
+        &lt;br&gt;
+        &lt;br&gt;
+        Also, I would like to leave a couple of tips so that children train and learn more effectively:
+        &lt;br&gt;
+        &lt;ol&gt;
+            &lt;li&gt;&lt;i&gt;It is better to train a little, but often.&lt;/i&gt;&lt;/li&gt;
+                To do this, you can set the maximum time for one training session and the duration of the breaks in the settings. Also, in the same section of the application, you can turn on notifications about the desired start of a training.
+            &lt;br&gt;
+            &lt;li&gt;&lt;i&gt;Set aside a specific training time in your child\'s schedule.&lt;/i&gt;&lt;/li&gt;
+                This will help your child to develop a habit, as well as exercise systematically, which will allow your child to better remember and assimilate information
+            &lt;br&gt;
+            &lt;li&gt;&lt;i&gt;Turn on the achievement system in the application settings by linking your Google Play Games account&lt;/i&gt;&lt;/li&gt;
+        &lt;/ol&gt;
+    </string>
 
     <string name="kids_info_content">Hey! This application should help you to completely learn the multiplication table as soon as possible, regardless of your initial level. To make this happen faster, train a little, but often, and be sure to take breaks. It will be very good if you set aside a special time for training every day. Of course, the result will not be immediately visible, but in the near future it will certainly appear. Good luck and success to you!</string>
-    <string name="about_app_content">Super Schoolboy Remastered was created to help students learn the multiplication table quickly and efficiently.
-\n
-\nUsage:
+    <string name="about_app_content">
+        Super Schoolboy Remastered was created to help students learn the multiplication table quickly and efficiently.
+        &lt;br&gt;
+        &lt;br&gt;
+        &lt;b&gt;Usage:&lt;/b&gt;
+        &lt;br&gt;
+        On the main screen, below the start train button, there is a train setup button, where you can view and change settings related directly to training sessions. You can start a training session by tapping the button on the main screen with the corresponding text. The principles of the application are not much different from its "ancestor" version. During a training session, depending on the timer settings, you will be given a time to respond. Use the keyboard in the window to enter it. After pressing the button to enter the answer or the timer expires, the answer will be sent for checking, and according to its results, the counter of correct or incorrect answers will be replenished. Unlike the original "Super Schoolboy" application, the training session can only be completed manually (the possibility of "losing", for example, due to 3 incorrect answers, has been removed).
+        &lt;br&gt;
+        &lt;br&gt;
+        Also, the application has other useful functions (for example, statistics) and information materials. Navigation to them is done through a side pull-down menu.
+        &lt;br&gt;
+        &lt;br&gt;
+        The app has a function for getting rank and achievements. To activate it, link your Google Play Games account and select the appropriate item in the settings. The rank shows the general level of the player, it can be viewed in detail in the statistics window. Achievements are awarded subject to certain conditions, their full list can be viewed directly in the Google Play Games app
+        &lt;br&gt;
+        &lt;br&gt;
+        Good luck and success!
+        &lt;br&gt;
+        &lt;br&gt;
+        &lt;b&gt;A few words from the developer:&lt;/b&gt;
+        &lt;br&gt;
+        Hello everyone! My name is Roman Popov and I am the developer of this application. The idea, design, programming itself and the rest of the stages of creating a high-quality product were completely passed by me alone (except for the assistance of relatives and friends in some moments, for which I want to thank them). I hope that using this and my other applications will allow you to achieve good results in your studies. Thanks for downloading!
+        &lt;br&gt;
+        &lt;br&gt;
+        v0.1pr
+    </string>
 
-\nOn the main screen, below the start train button, there is a train setup button, where you can view and change settings related directly to training sessions. You can start a training session by tapping the button on the main screen with the corresponding text. The principles of the application are not much different from its "ancestor" version. During a training session, depending on the timer settings, you will be given a time to respond. Use the keyboard in the window to enter it. After pressing the button to enter the answer or the timer expires, the answer will be sent for checking, and according to its results, the counter of correct or incorrect answers will be replenished. Unlike the original "Super Schoolboy" application, the training session can only be completed manually (the possibility of "losing", for example, due to 3 incorrect answers, has been removed).
-    Also, the application has other useful functions (for example, statistics) and information materials. Navigation to them is done through a side pull-down menu.
-    The app has a function for getting rank and achievements. To activate it, link your Google Play Games account and select the appropriate item in the settings. The rank shows the general level of the player, it can be viewed in detail in the statistics window. Achievements are awarded subject to certain conditions, their full list can be viewed directly in the Google Play Games app
-    Good luck and success!
-\n
-\nA few words from the developer:
-
-\nHello everyone! My name is Roman Popov and I am the developer of this application. The idea, design, programming itself and the rest of the stages of creating a high-quality product were completely passed by me alone (except for the assistance of relatives and friends in some moments, for which I want to thank them). I hope that using this and my other applications will allow you to achieve good results in your studies. Thanks for downloading!
-\nv0.1pr</string>
+    <string name="absolute_text">Absolute</string>
+    <string name="maximum_number_of_unmistakable_answers_in_a_row_text">Maximum number\nof unmistakable\nanswers in a row</string>
+    <string name="average_response_time_text">Average response time</string>
+    <string name="minimal_average_response_time_text">Minimal average response time</string>
+    <string name="sec_text">s</string>
+    <string name="last_session_text">Last session</string>
 
     <!-- Drawer tabs' texts -->
     <string name="training_text">Training</string>
@@ -70,9 +99,8 @@
     <string name="settings_text">Settings</string>
     <string name="user_avatar_text">User\'s avatar</string>
     <string name="drawer_tab_icon_text">drawer tab icon</string>
-    <string name="title_activity_training">TrainingActivity</string>
     <string name="back_text">Back</string>
-    <string name="time_left_text">Time left icon</string>
-    <string name="done_right_text">Done right icon</string>
-    <string name="done_incorrect_text">Done incorrect icon</string>
+    <string name="timer_text">Timer</string>
+    <string name="right_answers_text">Right answers</string>
+    <string name="wrong_answers_text">Wrong answers</string>
 </resources>

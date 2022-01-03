@@ -1,5 +1,7 @@
 package com.oftatech.superschoolboyremastered.ui
 
+import android.app.Activity
+import android.util.DisplayMetrics
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -15,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -23,11 +26,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.RequestConfiguration
 import com.oftatech.superschoolboyremastered.ui.theme.Silver
 import com.oftatech.superschoolboyremastered.ui.theme.White
 import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.activity.UIState
+import java.util.*
 
 @Composable
 fun PrimaryTextButton(
@@ -145,7 +154,6 @@ fun TextRadioButton(
 fun ProfileDrawerTab(
     modifier: Modifier = Modifier,
 ) {
-    //TODO Добавить параметры вместо placeholder'ов
     Column(
         modifier = modifier
             .fillMaxWidth(),
@@ -217,7 +225,7 @@ fun DrawerTab(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Image(
+            Icon(
                 modifier = Modifier
                     .padding(end = 10.dp)
                     .size(22.dp),
@@ -239,4 +247,33 @@ fun DrawerTab(
             thickness = 1.dp,
         )
     }
+}
+
+@Composable
+fun FullWidthAdaptiveBannerAds(
+    modifier: Modifier = Modifier,
+) {
+    val activity = LocalContext.current as Activity
+    AndroidView(
+        modifier = modifier.fillMaxWidth(),
+        factory = {
+        val adView = AdView(it)
+        //TODO Заменить adUnitId
+        adView.adUnitId = "ca-app-pub-3940256099942544/6300978111"
+
+        val display = activity.windowManager.defaultDisplay
+        val outMetrics = DisplayMetrics()
+        display.getMetrics(outMetrics)
+
+        val density = outMetrics.density
+        val adWidthPixels = outMetrics.widthPixels.toFloat()
+        val adWidth = (adWidthPixels / density).toInt()
+
+        adView.adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(it, adWidth)
+        adView.loadAd(
+            AdRequest.Builder()
+                .build())
+
+        adView
+    })
 }

@@ -6,12 +6,15 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -31,13 +34,22 @@ import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
 import com.oftatech.superschoolboyremastered.ui.theme.Madang
 import com.oftatech.superschoolboyremastered.ui.theme.MainAppContent
+import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val viewModel by viewModels<MainViewModel>()
         setContent {
-            MainAppContent(accentColor = MaterialTheme.colors.secondary) {
+            MainAppContent(
+                darkTheme = Utils.isDarkTheme(viewModel.appTheme.observeAsState().value!!),
+                accentColor = animateColorAsState(targetValue = viewModel.accentColor.observeAsState().value!!).value
+            ) {
                 appSetup()
                 LoginActivityScreenContent()
             }
@@ -50,12 +62,11 @@ class LoginActivity : ComponentActivity() {
 private fun LoginActivityScreenContent() {
     val activity = LocalContext.current as Activity
 
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceEvenly,
-        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Column(
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -79,9 +90,8 @@ private fun LoginActivityScreenContent() {
             )
         }
 
-        //TODO Центрировать лого
         Image(
-            modifier = Modifier.size(246.dp),
+            modifier = Modifier.size(246.dp).align(Alignment.Center),
             painter = painterResource(id = R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
             contentDescription = stringResource(id = R.string.app_icon_text),
             contentScale = ContentScale.FillBounds,
@@ -89,7 +99,9 @@ private fun LoginActivityScreenContent() {
 
         Column(
             modifier = Modifier
-                .width(IntrinsicSize.Max),
+                .width(IntrinsicSize.Max)
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             PrimaryTextButton(
