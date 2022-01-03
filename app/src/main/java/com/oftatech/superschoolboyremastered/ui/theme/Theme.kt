@@ -1,7 +1,8 @@
-package com.easyeducation.superschoolboyremastered.ui.theme
+package com.oftatech.superschoolboyremastered.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
@@ -24,20 +25,37 @@ private val LightColorPalette = lightColors(
 )
 
 @Composable
+fun MainAppContent(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    accentColor: Color,
+    content: @Composable () -> Unit,
+) {
+    SuperSchoolboyRemasteredTheme(darkTheme = darkTheme, accentColor = accentColor) {
+        Surface(
+            color = MaterialTheme.colors.background,
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
 fun SuperSchoolboyRemasteredTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    content: @Composable () -> Unit
+    accentColor: Color,
+    content: @Composable () -> Unit,
 ) {
     val colors = if (darkTheme) {
-        DarkColorPalette
+        DarkColorPalette.copy(secondary = accentColor)
     } else {
-        LightColorPalette
+        LightColorPalette.copy(secondary = accentColor)
     }
 
+    //TODO Поменять background цвета
     MaterialTheme(
         colors = colors,
         typography = Typography,
         shapes = Shapes,
-        content = content
+        content = content,
     )
 }

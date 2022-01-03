@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:gravity="top|start|bottom|end" android:drawable="@color/mine_shaft"/>
+    <item android:gravity="center" android:drawable="@drawable/superschoolboy_remastered_round_icon_with_inner_shadow" android:height="246dp" android:width="246dp"/>
+</layer-list>
