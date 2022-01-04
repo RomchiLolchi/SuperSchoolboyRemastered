@@ -2,4 +2,5 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:gravity="top|start|bottom|end" android:drawable="@color/white"/>
     <item android:gravity="center" android:drawable="@drawable/superschoolboy_remastered_round_icon_with_inner_shadow"  android:height="246dp" android:width="246dp"/>
+    <item android:gravity="bottom|center_horizontal" android:drawable="@drawable/oftatech_logo_color_transparent" android:height="123dp" android:width="123dp"/>
 </layer-list>
