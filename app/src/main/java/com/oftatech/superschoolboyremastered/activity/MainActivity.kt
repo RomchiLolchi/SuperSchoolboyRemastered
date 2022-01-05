@@ -62,6 +62,7 @@ import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
+import java.text.DecimalFormat
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -433,7 +434,7 @@ private fun StatisticsScreen(
                         SettingsBigPart(partName = stringResource(id = R.string.absolute_text)) {
                             StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.absoluteRightAnswersInRow.value.toString())
                             Spacer(modifier = Modifier.height(20.dp))
-                            val mart = if (statsViewModel.absoluteAverageResponseTime.value!!.isNaN()) "-" else "${statsViewModel.absoluteAverageResponseTime.value}${stringResource(id = R.string.sec_text)}"
+                            val mart = if (statsViewModel.absoluteAverageResponseTime.value!!.isNaN()) "-" else "${DecimalFormat("#.##").format(statsViewModel.absoluteAverageResponseTime.value)}${stringResource(id = R.string.sec_text)}"
                             StatisticsField(text = stringResource(id = R.string.minimal_average_response_time_text), value = mart)
                         }
                         Spacer(modifier = Modifier.height(30.dp))
@@ -446,7 +447,7 @@ private fun StatisticsScreen(
                             Spacer(modifier = Modifier.height(20.dp))
                             StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.lsRightAnswersInRow.value.toString())
                             Spacer(modifier = Modifier.height(20.dp))
-                            val art = if (statsViewModel.lsAverageResponseTime.value!!.isNaN()) "-" else "${statsViewModel.lsAverageResponseTime.value.toString()}${stringResource(id = R.string.sec_text)}"
+                            val art = if (statsViewModel.lsAverageResponseTime.value!!.isNaN()) "-" else "${DecimalFormat("#.##").format(statsViewModel.lsAverageResponseTime.value)}${stringResource(id = R.string.sec_text)}"
                             StatisticsField(text = stringResource(id = R.string.average_response_time_text), value = art)
                         }
                     }
