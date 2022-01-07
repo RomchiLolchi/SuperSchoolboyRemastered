@@ -1,8 +1,12 @@
 package com.oftatech.superschoolboyremastered.viewmodel
 
+import androidx.compose.material.MaterialTheme
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
@@ -23,6 +27,9 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     val userAnswer = MutableLiveData("")
     private var rightAnswer = 0
     private var timer = Timer(true)
+
+    val isRightAnswersIconTintStandard = MutableLiveData(true)
+    val isWrongAnswersIconTintStandard = MutableLiveData(true)
 
     private fun generateQuestionAndAnswer() {
         val firstNumber = (1..10).random()
@@ -49,9 +56,15 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
         if (parsedUserAnswer == rightAnswer.toLong()) {
             rightAnswers.postValue(rightAnswers.value!! + 1)
             allRightAnswersInRow[allRightAnswersInRow.lastIndex] = allRightAnswersInRow.last() + 1
+            viewModelScope.launch {
+                startRightAnswersTintAnimation()
+            }
         } else {
             wrongAnswers.postValue(wrongAnswers.value!! + 1)
             allRightAnswersInRow.add(0)
+            viewModelScope.launch {
+                startWrongAnswersTintAnimation()
+            }
         }
     }
 
@@ -101,5 +114,17 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
             e.printStackTrace()
         }
         timer = Timer(true)
+    }
+
+    private suspend fun startRightAnswersTintAnimation() {
+        isRightAnswersIconTintStandard.value = false
+        delay(500)
+        isRightAnswersIconTintStandard.value = true
+    }
+
+    private suspend fun startWrongAnswersTintAnimation() {
+        isWrongAnswersIconTintStandard.value = false
+        delay(500)
+        isWrongAnswersIconTintStandard.value = true
     }
 }

@@ -19,10 +19,13 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -34,6 +37,8 @@ import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
 import com.oftatech.superschoolboyremastered.ui.theme.MainAppContent
+import com.oftatech.superschoolboyremastered.ui.theme.MintGreen
+import com.oftatech.superschoolboyremastered.ui.theme.Red
 import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
@@ -59,6 +64,7 @@ class TrainingActivity : ComponentActivity() {
                 accentColor = animateColorAsState(targetValue = mainViewModel.accentColor.observeAsState().value!!).value
             ) {
                 appSetup()
+                val standardColor = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
                 TrainingActivityContent(
                     question = trainingViewModel.question.observeAsState().value!!,
                     userAnswer = trainingViewModel.userAnswer.observeAsState().value!!,
@@ -76,7 +82,17 @@ class TrainingActivity : ComponentActivity() {
                     },
                     actionOnSubmitPressed = {
                         trainingViewModel.completeTask()
-                    }
+                    },
+                    rightAnswersIconTint = if (trainingViewModel.isRightAnswersIconTintStandard.observeAsState().value == true) {
+                        animateColorAsState(targetValue = standardColor)
+                    } else {
+                        animateColorAsState(targetValue = MintGreen)
+                    }.value,
+                    wrongAnswersIconTint = if (trainingViewModel.isWrongAnswersIconTintStandard.observeAsState().value == true) {
+                        animateColorAsState(targetValue = standardColor)
+                    } else {
+                        animateColorAsState(targetValue = Red)
+                    }.value,
                 )
             }
             trainingViewModel.completeTask(check = false)
@@ -102,6 +118,8 @@ private fun TrainingActivityContent(
     onClearLastClicked: () -> Unit,
     onClearAllClicked: () -> Unit,
     actionOnSubmitPressed: () -> Unit,
+    rightAnswersIconTint: Color,
+    wrongAnswersIconTint: Color,
 ) {
     val activity = LocalContext.current as Activity
 
@@ -154,6 +172,8 @@ private fun TrainingActivityContent(
                     correctAnswers = correctAnswers,
                     incorrectAnswers = incorrectAnswers,
                     timeLeft = timeLeft,
+                    rightAnswersIconTint = rightAnswersIconTint,
+                    wrongAnswersIconTint = wrongAnswersIconTint,
                 )
             }
             NumericKeyboard(
@@ -228,6 +248,8 @@ private fun StatsBar(
     correctAnswers: Int,
     incorrectAnswers: Int,
     timeLeft: Int,
+    rightAnswersIconTint: Color,
+    wrongAnswersIconTint: Color,
 ) {
     Column(
         modifier = modifier.fillMaxWidth()
@@ -243,7 +265,6 @@ private fun StatsBar(
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
             Row(
-                /*modifier = Modifier.fillMaxWidth(),*/
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -255,7 +276,6 @@ private fun StatsBar(
                 )
                 Spacer(modifier = Modifier.width(7.dp))
                 Text(
-                    /*modifier = Modifier.fillMaxWidth(),*/
                     text = timeLeft.toString(),
                     fontFamily = robotoFontFamily,
                     fontWeight = FontWeight.Normal,
@@ -265,7 +285,6 @@ private fun StatsBar(
             }
 
             Row(
-                /*modifier = Modifier.fillMaxWidth(),*/
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -273,11 +292,11 @@ private fun StatsBar(
                     imageVector = Icons.Outlined.Done,
                     contentDescription = stringResource(
                         id = R.string.right_answers_text
-                    )
+                    ),
+                    tint = rightAnswersIconTint,
                 )
                 Spacer(modifier = Modifier.width(7.dp))
                 Text(
-                    /*modifier = Modifier.fillMaxWidth(),*/
                     text = correctAnswers.toString(),
                     fontFamily = robotoFontFamily,
                     fontWeight = FontWeight.Normal,
@@ -287,7 +306,6 @@ private fun StatsBar(
             }
 
             Row(
-                /*modifier = Modifier.fillMaxWidth(),*/
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -295,11 +313,11 @@ private fun StatsBar(
                     imageVector = Icons.Outlined.Close,
                     contentDescription = stringResource(
                         id = R.string.wrong_answers_text
-                    )
+                    ),
+                    tint = wrongAnswersIconTint,
                 )
                 Spacer(modifier = Modifier.width(7.dp))
                 Text(
-                    /*modifier = Modifier.fillMaxWidth(),*/
                     text = incorrectAnswers.toString(),
                     fontFamily = robotoFontFamily,
                     fontWeight = FontWeight.Normal,
