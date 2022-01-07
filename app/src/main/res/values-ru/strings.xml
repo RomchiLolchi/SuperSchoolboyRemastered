@@ -92,4 +92,8 @@
     <string name="average_response_time_text">Среднее время на ответ</string>
     <string name="absolute_text">Абсолютная</string>
     <string name="minimal_average_response_time_text">Минимальное среднее\nвремя на ответ</string>
+    <string name="gpg_error_text">Что-то пошло не так</string>
+    <string name="rank_text">ранг</string>
+    <string name="logout_gpg_text">Вы уверены что хотите выйти из аккаунта?</string>
+    <string name="cancel_text">Отмена</string>
 </resources>

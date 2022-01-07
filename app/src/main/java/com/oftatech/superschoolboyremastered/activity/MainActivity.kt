@@ -5,12 +5,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.util.TypedValue
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -48,6 +52,10 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.images.ImageManager
+import com.google.android.gms.games.Games
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -57,6 +65,7 @@ import com.oftatech.superschoolboyremastered.ui.theme.*
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
+import com.oftatech.superschoolboyremastered.viewmodel.GPGProfileViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -66,13 +75,25 @@ import java.text.DecimalFormat
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    private lateinit var logouted: MutableState<Boolean>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         val viewModel by viewModels<MainViewModel>()
         val statsViewModel by viewModels<StatisticsViewModel>()
+        val gpgProfileViewModel by viewModels<GPGProfileViewModel>()
         setContent {
+            logouted = remember {
+                mutableStateOf(
+                        GoogleSignIn.getLastSignedInAccount(this) == null || !GoogleSignIn.hasPermissions(
+                            GoogleSignIn.getLastSignedInAccount(this)
+                        )
+                )
+            }
+
             MainAppContent(
                 darkTheme = Utils.isDarkTheme(viewModel.appTheme.observeAsState().value!!),
                 accentColor = animateColorAsState(targetValue = viewModel.accentColor.observeAsState().value!!).value
@@ -85,6 +106,9 @@ class MainActivity : ComponentActivity() {
                     accentColor = viewModel.accentColor.observeAsState().value!!,
                     onAccentColorChange = { viewModel.accentColor.value = it },
                     statsViewModel = statsViewModel,
+                    gpgProfileViewModel = gpgProfileViewModel,
+                    logouted = logouted.value,
+                    onLogoutedChange = { logouted.value = it }
                 )
             }
         }
@@ -94,6 +118,32 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(this, LoginActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             })
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == LoginActivity.GPG_SIGN_IN) {
+            val result = data?.let { Auth.GoogleSignInApi.getSignInResultFromIntent(it) }
+            if (result?.isSuccess != true) {
+                var message = result!!.status.statusMessage
+                if (message == null || message.isEmpty()) {
+                    message = getString(R.string.gpg_error_text)
+                }
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            } else {
+                val gpgProfileViewModel by viewModels<GPGProfileViewModel>()
+                val player = Games.getPlayersClient(this, result.signInAccount!!)
+                player.currentPlayer.addOnSuccessListener {
+                    it.hiResImageUri?.let { it1 ->
+                        ImageManager.create(this).loadImage({ uri, drawable, boolean ->
+                            gpgProfileViewModel.avatar.value = (drawable as BitmapDrawable).bitmap
+                        }, it1)
+                    } ?: run { gpgProfileViewModel.avatar.value = null }
+                    gpgProfileViewModel.username.value = it.displayName
+                }
+                logouted.value = false
+            }
         }
     }
 }
@@ -106,6 +156,9 @@ private fun MainActivityScreenContent(
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
     statsViewModel: StatisticsViewModel,
+    gpgProfileViewModel: GPGProfileViewModel,
+    logouted: Boolean,
+    onLogoutedChange: (Boolean) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -150,7 +203,20 @@ private fun MainActivityScreenContent(
             MainActivityDrawerContent(
                 screens = screensList,
                 navController = navController,
-                drawerState = scaffoldState.drawerState
+                drawerState = scaffoldState.drawerState,
+                username = gpgProfileViewModel.username.observeAsState().value!!,
+                avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
+                    val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                    val canvas = android.graphics.Canvas(bmp)
+                    canvas.drawColor(android.graphics.Color.TRANSPARENT)
+                    bmp
+                },
+                rank = gpgProfileViewModel.rank.observeAsState().value!!,
+                onUserDataDelete = {
+                    gpgProfileViewModel.deleteUserData()
+                },
+                logouted = logouted,
+                onLogoutedChange = { onLogoutedChange(it) },
             )
         },
         drawerBackgroundColor = MaterialTheme.colors.background,
@@ -570,7 +636,14 @@ private fun MainActivityDrawerContent(
     screens: List<Screen>,
     navController: NavController,
     drawerState: DrawerState,
+    username: String,
+    avatar: Bitmap,
+    rank: String,
+    onUserDataDelete: () -> Unit,
+    logouted: Boolean,
+    onLogoutedChange: (Boolean) -> Unit,
 ) {
+    val activity = LocalContext.current as Activity
     val coroutineScope = rememberCoroutineScope()
 
     LazyColumn(
@@ -579,7 +652,9 @@ private fun MainActivityDrawerContent(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        //ProfileDrawerTab()
+        item {
+            ProfileDrawerTab(username = username, avatar = avatar, rank = rank, logouted = logouted, onLogoutedChange = { onLogoutedChange(it) }, onUserDataDelete = { onUserDataDelete() })
+        }
         itemsIndexed(screens) { index, screen ->
             DrawerTab(
                 modifier = Modifier.clickable(
