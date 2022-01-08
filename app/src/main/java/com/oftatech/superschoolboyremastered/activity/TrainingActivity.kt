@@ -259,12 +259,11 @@ private fun StatsBar(
                 .fillMaxWidth()
                 .padding(bottom = 5.dp), color = MaterialTheme.colors.secondary
         )
-        Row(
+        Box(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround,
         ) {
             Row(
+                modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -285,6 +284,7 @@ private fun StatsBar(
             }
 
             Row(
+                modifier = Modifier.align(Alignment.Center),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -306,6 +306,7 @@ private fun StatsBar(
             }
 
             Row(
+                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
