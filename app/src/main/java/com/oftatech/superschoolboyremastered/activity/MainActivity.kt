@@ -62,6 +62,7 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.*
 import com.oftatech.superschoolboyremastered.ui.theme.*
+import com.oftatech.superschoolboyremastered.util.TextHtmlTagHandler
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
@@ -267,7 +268,7 @@ private fun MainActivityScreenContent(
             composable(Screen.AboutApp.route) {
                 TextScreen(
                     header = stringResource(id = R.string.about_app),
-                    text = Html.fromHtml(stringResource(id = R.string.about_app_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
+                    text = Html.fromHtml(stringResource(id = R.string.about_app_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM, null, TextHtmlTagHandler(MaterialTheme.colors.secondary))
                 )
             }
         }
