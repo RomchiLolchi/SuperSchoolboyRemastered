@@ -96,4 +96,8 @@
     <string name="rank_text">ранг</string>
     <string name="logout_gpg_text">Вы уверены что хотите выйти из аккаунта?</string>
     <string name="cancel_text">Отмена</string>
+    <string name="ranked_text">Рейтинговые</string>
+    <string name="session_settings">Настройки сессии</string>
+    <string name="difficulty_text">Сложность</string>
+    <string name="numbers_text">Цифры</string>
 </resources>

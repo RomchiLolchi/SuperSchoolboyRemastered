@@ -5,9 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
@@ -20,6 +20,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -36,6 +37,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -44,9 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.app.ActivityCompat
 import androidx.core.content.res.ResourcesCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -73,6 +73,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.text.DecimalFormat
+import kotlin.math.roundToInt
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -89,9 +90,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             logouted = remember {
                 mutableStateOf(
-                        GoogleSignIn.getLastSignedInAccount(this) == null || !GoogleSignIn.hasPermissions(
-                            GoogleSignIn.getLastSignedInAccount(this)
-                        )
+                    GoogleSignIn.getLastSignedInAccount(this) == null || !GoogleSignIn.hasPermissions(
+                        GoogleSignIn.getLastSignedInAccount(this)
+                    )
                 )
             }
 
@@ -149,6 +150,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MainActivityScreenContent(
     modifier: Modifier = Modifier,
@@ -164,6 +166,7 @@ private fun MainActivityScreenContent(
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
+    val bottomState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
 
     val screensList = listOf(
         Screen.Training,
@@ -174,114 +177,321 @@ private fun MainActivityScreenContent(
         Screen.AboutApp
     )
 
-    Scaffold(
-        modifier = modifier,
-        topBar = {
-            Row(
+    val ranked = remember { mutableStateOf(false) }
+    val timer = remember { mutableStateOf(0.1f) }
+    val numbers = remember {
+        mutableStateMapOf(
+            1 to true,
+            2 to true,
+            3 to true,
+            4 to true,
+            5 to true,
+            6 to true,
+            7 to true,
+            8 to true,
+            9 to true,
+            10 to true
+        )
+    }
+    val difficulty = remember { mutableStateOf(0.01f) }
+
+    ModalBottomSheetLayout(
+        sheetContent = {
+            Column(
                 modifier = Modifier
-                    .padding(top = 16.dp)
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically,
+                    .padding(horizontal = 15.dp)
+                    .fillMaxSize()
             ) {
-                Icon(
-                    modifier = Modifier
-                        .padding(start = 16.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            coroutineScope.launch {
-                                scaffoldState.drawerState.open()
-                            }
-                        },
-                    imageVector = Icons.Outlined.Menu,
-                    contentDescription = stringResource(id = R.string.menu_text),
+                Text(
+                    modifier = Modifier.padding(top = 20.dp),
+                    text = stringResource(id = R.string.session_settings),
+                    fontFamily = robotoFontFamily,
+                    fontSize = 36.sp,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = FontStyle.Normal,
                 )
-            }
-        },
-        drawerContent = {
-            MainActivityDrawerContent(
-                screens = screensList,
-                navController = navController,
-                drawerState = scaffoldState.drawerState,
-                username = gpgProfileViewModel.username.observeAsState().value!!,
-                avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
-                    val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
-                    val canvas = android.graphics.Canvas(bmp)
-                    canvas.drawColor(android.graphics.Color.TRANSPARENT)
-                    bmp
-                },
-                rank = gpgProfileViewModel.rank.observeAsState().value!!,
-                onUserDataDelete = {
-                    gpgProfileViewModel.deleteUserData()
-                },
-                logouted = logouted,
-                onLogoutedChange = { onLogoutedChange(it) },
-            )
-        },
-        drawerBackgroundColor = MaterialTheme.colors.background,
-        drawerShape = RectangleShape,
-        drawerElevation = 10.dp,
-        scaffoldState = scaffoldState,
-    ) { paddingValues ->
-        NavHost(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize(),
-            navController = navController,
-            startDestination = Screen.Training.route
-        ) {
-            composable(Screen.Training.route) {
-                TrainingScreen(
-                    modifier = Modifier.padding(
-                        paddingValues
+                Spacer(modifier = Modifier.height(20.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        text = stringResource(id = R.string.ranked_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
                     )
-                )
+                    Switch(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        checked = ranked.value,
+                        onCheckedChange = { ranked.value = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = MaterialTheme.colors.secondary,
+                            checkedTrackColor = MaterialTheme.colors.secondary
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.difficulty_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Slider(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .width(300.dp),
+                            value = difficulty.value,
+                            onValueChange = { difficulty.value = it },
+                            valueRange = 0.01f..0.03f,
+                            steps = 1,
+                            enabled = ranked.value,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colors.secondary,
+                                activeTrackColor = MaterialTheme.colors.secondary,
+                                activeTickColor = MaterialTheme.colors.secondary,
+                            ),
+                        )
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterEnd),
+                            text = "${(difficulty.value * 100).roundToInt()}",
+                            fontFamily = robotoFontFamily,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Normal,
+                            fontStyle = FontStyle.Normal,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.timer_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Slider(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .width(300.dp),
+                            value = timer.value,
+                            onValueChange = { timer.value = it },
+                            valueRange = 0.05f..0.6f,
+                            enabled = !ranked.value,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MaterialTheme.colors.secondary,
+                                activeTrackColor = MaterialTheme.colors.secondary,
+                                activeTickColor = MaterialTheme.colors.secondary,
+                            ),
+                        )
+                        Text(
+                            modifier = Modifier.align(Alignment.CenterEnd),
+                            text = "${(timer.value * 100).roundToInt()}${stringResource(id = R.string.sec_text)}",
+                            fontFamily = robotoFontFamily,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Normal,
+                            fontStyle = FontStyle.Normal,
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(15.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.numbers_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        for (i in numbers) {
+                            numberColumn(
+                                number = i.key,
+                                checked = i.value,
+                                onCheckedChange = { numbers[i.key] = it },
+                                isActive = !ranked.value,
+                            )
+                        }
+                    }
+                }
             }
-            composable(Screen.Settings.route) {
-                SettingsScreen(
+        },
+        sheetState = bottomState,
+    ) {
+        Scaffold(
+            modifier = modifier,
+            topBar = {
+                Row(
                     modifier = Modifier
-                        .padding(paddingValues)
-                        .padding(horizontal = 13.dp),
-                    uiThemeState = uiThemeState,
-                    onUIThemeStateChange = onUIThemeStateChange,
-                    accentColor = accentColor,
-                    onAccentColorChange = onAccentColorChange
+                        .padding(top = 16.dp)
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(start = 16.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                coroutineScope.launch {
+                                    scaffoldState.drawerState.open()
+                                }
+                            },
+                        imageVector = Icons.Outlined.Menu,
+                        contentDescription = stringResource(id = R.string.menu_text),
+                    )
+                }
+            },
+            drawerContent = {
+                MainActivityDrawerContent(
+                    screens = screensList,
+                    navController = navController,
+                    drawerState = scaffoldState.drawerState,
+                    username = gpgProfileViewModel.username.observeAsState().value!!,
+                    avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
+                        val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                        val canvas = android.graphics.Canvas(bmp)
+                        canvas.drawColor(android.graphics.Color.TRANSPARENT)
+                        bmp
+                    },
+                    rank = gpgProfileViewModel.rank.observeAsState().value!!,
+                    onUserDataDelete = {
+                        gpgProfileViewModel.deleteUserData()
+                    },
+                    logouted = logouted,
+                    onLogoutedChange = { onLogoutedChange(it) },
                 )
-            }
-            composable(Screen.Statistics.route) {
-                StatisticsScreen(modifier = Modifier.padding(paddingValues).padding(horizontal = 13.dp), statsViewModel = statsViewModel)
-            }
-            composable(Screen.AdultInfo.route) {
-                TextScreen(
-                    header = stringResource(id = R.string.info_for_adults),
-                    text = Html.fromHtml(stringResource(id = R.string.adult_info_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
-                )
-            }
-            composable(Screen.KidsInfo.route) {
-                TextScreen(
-                    header = stringResource(id = R.string.info_for_kids),
-                    text = Html.fromHtml(stringResource(id = R.string.kids_info_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM)
-                )
-            }
-            composable(Screen.AboutApp.route) {
-                TextScreen(
-                    header = stringResource(id = R.string.about_app),
-                    text = Html.fromHtml(stringResource(id = R.string.about_app_content), Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM, null, TextHtmlTagHandler(MaterialTheme.colors.secondary))
-                )
+            },
+            drawerBackgroundColor = MaterialTheme.colors.background,
+            drawerShape = RectangleShape,
+            drawerElevation = 10.dp,
+            scaffoldState = scaffoldState,
+        ) { paddingValues ->
+            NavHost(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize(),
+                navController = navController,
+                startDestination = Screen.Training.route
+            ) {
+                composable(Screen.Training.route) {
+                    TrainingScreen(
+                        modifier = Modifier.padding(
+                            paddingValues
+                        ),
+                        onBottomSheetOpen = {
+                            coroutineScope.launch {
+                                bottomState.show()
+                            }
+                        }
+                    )
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .padding(horizontal = 13.dp),
+                        uiThemeState = uiThemeState,
+                        onUIThemeStateChange = onUIThemeStateChange,
+                        accentColor = accentColor,
+                        onAccentColorChange = onAccentColorChange
+                    )
+                }
+                composable(Screen.Statistics.route) {
+                    StatisticsScreen(
+                        modifier = Modifier
+                            .padding(paddingValues)
+                            .padding(horizontal = 13.dp), statsViewModel = statsViewModel
+                    )
+                }
+                composable(Screen.AdultInfo.route) {
+                    TextScreen(
+                        header = stringResource(id = R.string.info_for_adults),
+                        text = Html.fromHtml(
+                            stringResource(id = R.string.adult_info_content),
+                            Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
+                        )
+                    )
+                }
+                composable(Screen.KidsInfo.route) {
+                    TextScreen(
+                        header = stringResource(id = R.string.info_for_kids),
+                        text = Html.fromHtml(
+                            stringResource(id = R.string.kids_info_content),
+                            Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
+                        )
+                    )
+                }
+                composable(Screen.AboutApp.route) {
+                    TextScreen(
+                        header = stringResource(id = R.string.about_app),
+                        text = Html.fromHtml(
+                            stringResource(id = R.string.about_app_content),
+                            Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM,
+                            null,
+                            TextHtmlTagHandler(MaterialTheme.colors.secondary)
+                        )
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
+private fun numberColumn(number: Int, checked: Boolean, onCheckedChange: (Boolean) -> Unit, isActive: Boolean) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(
+            text = number.toString(),
+            fontFamily = robotoFontFamily,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+        )
+        Spacer(modifier = Modifier.height(3.dp))
+        Checkbox(
+            checked = checked,
+            onCheckedChange = { onCheckedChange(it) },
+            colors = CheckboxDefaults.colors(checkedColor = MaterialTheme.colors.secondary),
+            enabled = isActive,
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
 private fun TrainingScreen(
     modifier: Modifier = Modifier,
+    onBottomSheetOpen: () -> Unit,
 ) {
     val activity = LocalContext.current as Activity
 
-    Box (
+    Box(
         modifier = modifier
             .fillMaxSize(),
     ) {
@@ -309,6 +519,13 @@ private fun TrainingScreen(
                 openTrainingActivity(activity)
             }
             Row(
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        onBottomSheetOpen()
+                    },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -492,30 +709,59 @@ private fun StatisticsScreen(
         WindowHeader(
             text = stringResource(id = R.string.statistics_text)
         )
-        when(statsViewModel.isEmpty()) {
+        when (statsViewModel.isEmpty()) {
             true -> PlugScreen()
             false -> {
                 LazyColumn {
                     item {
                         Spacer(modifier = Modifier.height(30.dp))
                         SettingsBigPart(partName = stringResource(id = R.string.absolute_text)) {
-                            StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.absoluteRightAnswersInRow.value.toString())
+                            StatisticsField(
+                                text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text),
+                                value = statsViewModel.absoluteRightAnswersInRow.value.toString()
+                            )
                             Spacer(modifier = Modifier.height(20.dp))
-                            val mart = if (statsViewModel.absoluteAverageResponseTime.value!!.isNaN()) "-" else "${DecimalFormat("#.##").format(statsViewModel.absoluteAverageResponseTime.value)}${stringResource(id = R.string.sec_text)}"
-                            StatisticsField(text = stringResource(id = R.string.minimal_average_response_time_text), value = mart)
+                            val mart =
+                                if (statsViewModel.absoluteAverageResponseTime.value!!.isNaN()) "-" else "${
+                                    DecimalFormat("#.##").format(statsViewModel.absoluteAverageResponseTime.value)
+                                }${stringResource(id = R.string.sec_text)}"
+                            StatisticsField(
+                                text = stringResource(id = R.string.minimal_average_response_time_text),
+                                value = mart
+                            )
                         }
                         Spacer(modifier = Modifier.height(30.dp))
                         SettingsBigPart(partName = stringResource(id = R.string.last_session_text)) {
-                            StatisticsField(text = stringResource(id = R.string.timer_text), value = "${statsViewModel.lsTimer.value.toString()}${stringResource(id = R.string.sec_text)}")
+                            StatisticsField(
+                                text = stringResource(id = R.string.timer_text),
+                                value = "${statsViewModel.lsTimer.value.toString()}${
+                                    stringResource(id = R.string.sec_text)
+                                }"
+                            )
                             Spacer(modifier = Modifier.height(20.dp))
-                            StatisticsField(text = stringResource(id = R.string.right_answers_text), value = statsViewModel.lsRightAnswers.value.toString())
+                            StatisticsField(
+                                text = stringResource(id = R.string.right_answers_text),
+                                value = statsViewModel.lsRightAnswers.value.toString()
+                            )
                             Spacer(modifier = Modifier.height(20.dp))
-                            StatisticsField(text = stringResource(id = R.string.wrong_answers_text), value = statsViewModel.lsWrongAnswers.value.toString())
+                            StatisticsField(
+                                text = stringResource(id = R.string.wrong_answers_text),
+                                value = statsViewModel.lsWrongAnswers.value.toString()
+                            )
                             Spacer(modifier = Modifier.height(20.dp))
-                            StatisticsField(text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text), value = statsViewModel.lsRightAnswersInRow.value.toString())
+                            StatisticsField(
+                                text = stringResource(id = R.string.maximum_number_of_unmistakable_answers_in_a_row_text),
+                                value = statsViewModel.lsRightAnswersInRow.value.toString()
+                            )
                             Spacer(modifier = Modifier.height(20.dp))
-                            val art = if (statsViewModel.lsAverageResponseTime.value!!.isNaN()) "-" else "${DecimalFormat("#.##").format(statsViewModel.lsAverageResponseTime.value)}${stringResource(id = R.string.sec_text)}"
-                            StatisticsField(text = stringResource(id = R.string.average_response_time_text), value = art)
+                            val art =
+                                if (statsViewModel.lsAverageResponseTime.value!!.isNaN()) "-" else "${
+                                    DecimalFormat("#.##").format(statsViewModel.lsAverageResponseTime.value)
+                                }${stringResource(id = R.string.sec_text)}"
+                            StatisticsField(
+                                text = stringResource(id = R.string.average_response_time_text),
+                                value = art
+                            )
                         }
                     }
                 }
@@ -601,15 +847,15 @@ private fun TextScreen(
         Spacer(modifier = Modifier.height(30.dp))
         AndroidView(modifier = Modifier.verticalScroll(scrollState),
             factory = {
-            TextView(it).apply {
-                setText(text)
-                setTextColor(onBackground)
-                typeface = ResourcesCompat.getFont(it, R.font.roboto)
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 19F)
-                movementMethod = LinkMovementMethod.getInstance()
-                setLinkTextColor(ColorStateList(states, colors))
-            }
-        })
+                TextView(it).apply {
+                    setText(text)
+                    setTextColor(onBackground)
+                    typeface = ResourcesCompat.getFont(it, R.font.roboto)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 19F)
+                    movementMethod = LinkMovementMethod.getInstance()
+                    setLinkTextColor(ColorStateList(states, colors))
+                }
+            })
     }
 }
 
@@ -621,7 +867,9 @@ sealed class Screen(
     object Training : Screen("training", Icons.Outlined.FitnessCenter, R.string.training_text)
     object Settings : Screen("settings", Icons.Outlined.Settings, R.string.settings_text)
     object Statistics : Screen("stats", Icons.Outlined.Analytics, R.string.statistics_text)
-    object AdultInfo : Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
+    object AdultInfo :
+        Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
+
     object KidsInfo : Screen("kids_info", Icons.Outlined.ChildCare, R.string.info_for_kids)
     object AboutApp : Screen("app_info", Icons.Outlined.Info, R.string.about_app)
 }
@@ -654,7 +902,13 @@ private fun MainActivityDrawerContent(
         horizontalAlignment = Alignment.Start
     ) {
         item {
-            ProfileDrawerTab(username = username, avatar = avatar, rank = rank, logouted = logouted, onLogoutedChange = { onLogoutedChange(it) }, onUserDataDelete = { onUserDataDelete() })
+            ProfileDrawerTab(
+                username = username,
+                avatar = avatar,
+                rank = rank,
+                logouted = logouted,
+                onLogoutedChange = { onLogoutedChange(it) },
+                onUserDataDelete = { onUserDataDelete() })
         }
         itemsIndexed(screens) { index, screen ->
             DrawerTab(

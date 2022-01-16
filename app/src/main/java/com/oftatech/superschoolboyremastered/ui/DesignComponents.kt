@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.util.DisplayMetrics
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -18,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -138,10 +140,21 @@ fun TextRadioButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = actionOnClick,
-        )
+        Column {
+            Box(
+                modifier = Modifier
+                    .size(15.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isSelected) MaterialTheme.colors.secondary else LocalContentColor.current.copy(
+                            alpha = LocalContentAlpha.current
+                        )
+                    )
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                        actionOnClick()
+                    }
+            )
+        }
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             modifier = Modifier
@@ -357,8 +370,7 @@ fun FullWidthAdaptiveBannerAds(
         modifier = modifier.fillMaxWidth(),
         factory = {
             val adView = AdView(it)
-            //TODO Заменить adUnitId
-            adView.adUnitId = "ca-app-pub-3940256099942544/6300978111"
+            adView.adUnitId = "ca-app-pub-3756145573922744/7298224334"
 
             val display = activity.windowManager.defaultDisplay
             val outMetrics = DisplayMetrics()

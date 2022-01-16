@@ -15,6 +15,11 @@
     <string name="rank_text">rank</string>
     <string name="logout_gpg_text">Are you sure you want to log out of your account?</string>
     <string name="cancel_text">Cancel</string>
+    <string name="session_settings">Session settings</string>
+    <string name="ranked_text">Ranked</string>
+    <string name="difficulty_text">Difficulty</string>
+    <string name="numbers_text">Numbers</string>
+
 
     <string name="exit_text">Exit</string>
     <string name="submit_text">Submit</string>
