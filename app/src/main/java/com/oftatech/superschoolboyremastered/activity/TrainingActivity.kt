@@ -33,6 +33,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
@@ -40,22 +43,27 @@ import com.oftatech.superschoolboyremastered.ui.theme.MainAppContent
 import com.oftatech.superschoolboyremastered.ui.theme.MintGreen
 import com.oftatech.superschoolboyremastered.ui.theme.Red
 import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
+import com.oftatech.superschoolboyremastered.util.Application
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
-import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
-import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
-import com.oftatech.superschoolboyremastered.viewmodel.TrainingViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.*
 import dagger.hilt.android.AndroidEntryPoint
+import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 
 @AndroidEntryPoint
 class TrainingActivity : ComponentActivity() {
 
-    private val trainingViewModel by viewModels<TrainingViewModel>()
     private val statsViewModel by viewModels<StatisticsViewModel>()
+    private val trainingViewModel by viewModels<TrainingViewModel>() { object : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return TrainingViewModel(application as Application) as T
+        }
+    } }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        trainingViewModel.updateValuesFromSettings()
 
         val mainViewModel by viewModels<MainViewModel>()
         setContent {

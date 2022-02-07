@@ -22,7 +22,12 @@ class DaoProviders {
     }
 
     @Provides
-    fun provideGPGProfileDao(@ApplicationContext context: Context) : GPGProfileSPDao {
+    fun provideGPGProfileDao(@ApplicationContext context: Context): GPGProfileSPDao {
         return GPGProfileSPDao(context)
+    }
+
+    @Provides
+    fun providesSessionsSettingsSPDao(@ApplicationContext context: Context): SessionsSettingsSPDao {
+        return SessionsSettingsSPDao(context)
     }
 }

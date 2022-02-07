@@ -51,7 +51,6 @@ fun SuperSchoolboyRemasteredTheme(
         LightColorPalette.copy(secondary = accentColor)
     }
 
-    //TODO Поменять background цвета
     MaterialTheme(
         colors = colors,
         typography = Typography,

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -68,12 +69,14 @@ import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
 import com.oftatech.superschoolboyremastered.viewmodel.GPGProfileViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.text.DecimalFormat
 import kotlin.math.roundToInt
+import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -87,6 +90,7 @@ class MainActivity : ComponentActivity() {
         val viewModel by viewModels<MainViewModel>()
         val statsViewModel by viewModels<StatisticsViewModel>()
         val gpgProfileViewModel by viewModels<GPGProfileViewModel>()
+        val sessionSettingsViewModel by viewModels<SessionsSettingsViewModel>()
         setContent {
             logouted = remember {
                 mutableStateOf(
@@ -110,7 +114,15 @@ class MainActivity : ComponentActivity() {
                     statsViewModel = statsViewModel,
                     gpgProfileViewModel = gpgProfileViewModel,
                     logouted = logouted.value,
-                    onLogoutedChange = { logouted.value = it }
+                    onLogoutedChange = { logouted.value = it },
+                    ranked = sessionSettingsViewModel.ranked.observeAsState().value!!,
+                    onRankedChange = { sessionSettingsViewModel.ranked.value = it },
+                    timer = sessionSettingsViewModel.timer.observeAsState().value!!,
+                    onTimerChange = { sessionSettingsViewModel.timer.value = it },
+                    numbers = sessionSettingsViewModel.numbers.observeAsState().value!!,
+                    difficulty = sessionSettingsViewModel.difficulty.observeAsState().value!!,
+                    onDifficultyChange = { sessionSettingsViewModel.difficulty.value = it },
+                    onWriteNewNumbers = { sessionSettingsViewModel.writeNewNumbers(it) }
                 )
             }
         }
@@ -162,6 +174,14 @@ private fun MainActivityScreenContent(
     gpgProfileViewModel: GPGProfileViewModel,
     logouted: Boolean,
     onLogoutedChange: (Boolean) -> Unit,
+    ranked: Boolean,
+    onRankedChange: (Boolean) -> Unit,
+    timer: Float,
+    onTimerChange: (Float) -> Unit,
+    numbers: SnapshotStateMap<Int, Boolean>,
+    difficulty: Float,
+    onDifficultyChange: (Float) -> Unit,
+    onWriteNewNumbers: (SnapshotStateMap<Int, Boolean>) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -176,24 +196,6 @@ private fun MainActivityScreenContent(
         Screen.KidsInfo,
         Screen.AboutApp
     )
-
-    val ranked = remember { mutableStateOf(false) }
-    val timer = remember { mutableStateOf(0.1f) }
-    val numbers = remember {
-        mutableStateMapOf(
-            1 to true,
-            2 to true,
-            3 to true,
-            4 to true,
-            5 to true,
-            6 to true,
-            7 to true,
-            8 to true,
-            9 to true,
-            10 to true
-        )
-    }
-    val difficulty = remember { mutableStateOf(0.01f) }
 
     ModalBottomSheetLayout(
         sheetContent = {
@@ -211,7 +213,7 @@ private fun MainActivityScreenContent(
                     fontStyle = FontStyle.Normal,
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                Box(
+                /*Box(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
@@ -224,8 +226,8 @@ private fun MainActivityScreenContent(
                     )
                     Switch(
                         modifier = Modifier.align(Alignment.CenterEnd),
-                        checked = ranked.value,
-                        onCheckedChange = { ranked.value = it },
+                        checked = ranked,
+                        onCheckedChange = { onRankedChange(it) },
                         colors = SwitchDefaults.colors(
                             checkedThumbColor = MaterialTheme.colors.secondary,
                             checkedTrackColor = MaterialTheme.colors.secondary
@@ -250,11 +252,11 @@ private fun MainActivityScreenContent(
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                                 .width(300.dp),
-                            value = difficulty.value,
-                            onValueChange = { difficulty.value = it },
+                            value = difficulty,
+                            onValueChange = { onDifficultyChange(it) },
                             valueRange = 0.01f..0.03f,
                             steps = 1,
-                            enabled = ranked.value,
+                            enabled = ranked,
                             colors = SliderDefaults.colors(
                                 thumbColor = MaterialTheme.colors.secondary,
                                 activeTrackColor = MaterialTheme.colors.secondary,
@@ -263,7 +265,7 @@ private fun MainActivityScreenContent(
                         )
                         Text(
                             modifier = Modifier.align(Alignment.CenterEnd),
-                            text = "${(difficulty.value * 100).roundToInt()}",
+                            text = "${difficulty.getInStandardIntForm()}",
                             fontFamily = robotoFontFamily,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Normal,
@@ -271,7 +273,7 @@ private fun MainActivityScreenContent(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(15.dp))
+                Spacer(modifier = Modifier.height(15.dp))*/
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -289,10 +291,10 @@ private fun MainActivityScreenContent(
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                                 .width(300.dp),
-                            value = timer.value,
-                            onValueChange = { timer.value = it },
+                            value = timer,
+                            onValueChange = { onTimerChange(it) },
                             valueRange = 0.05f..0.6f,
-                            enabled = !ranked.value,
+                            enabled = !ranked,
                             colors = SliderDefaults.colors(
                                 thumbColor = MaterialTheme.colors.secondary,
                                 activeTrackColor = MaterialTheme.colors.secondary,
@@ -301,7 +303,7 @@ private fun MainActivityScreenContent(
                         )
                         Text(
                             modifier = Modifier.align(Alignment.CenterEnd),
-                            text = "${(timer.value * 100).roundToInt()}${stringResource(id = R.string.sec_text)}",
+                            text = "${timer.getInStandardIntForm()}${stringResource(id = R.string.sec_text)}",
                             fontFamily = robotoFontFamily,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Normal,
@@ -329,8 +331,11 @@ private fun MainActivityScreenContent(
                             numberColumn(
                                 number = i.key,
                                 checked = i.value,
-                                onCheckedChange = { numbers[i.key] = it },
-                                isActive = !ranked.value,
+                                onCheckedChange = {
+                                    numbers[i.key] = it
+                                    onWriteNewNumbers(numbers)
+                                },
+                                isActive = !ranked,
                             )
                         }
                     }

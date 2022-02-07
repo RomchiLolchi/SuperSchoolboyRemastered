@@ -1,6 +1,8 @@
 package com.oftatech.superschoolboyremastered.util
 
 import android.app.Application
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
 import com.google.firebase.ktx.Firebase
@@ -10,7 +12,12 @@ import com.oftatech.superschoolboyremastered.R
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class Application : Application() {
+class Application : Application(), ViewModelStoreOwner {
+
+    private val modelStore by lazy { ViewModelStore() }
+    override fun getViewModelStore(): ViewModelStore {
+        return modelStore
+    }
 
     override fun onCreate() {
         super.onCreate()
