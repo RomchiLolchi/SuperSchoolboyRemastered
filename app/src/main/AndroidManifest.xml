@@ -31,8 +31,12 @@
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
-        <!--TODO Заменить id-->
+            android:value="ca-app-pub-3756145573922744~6807282084"/>
+
+        <meta-data android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/ssr_gpg_app_id" />
+        <meta-data android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
     </application>
 
 </manifest>

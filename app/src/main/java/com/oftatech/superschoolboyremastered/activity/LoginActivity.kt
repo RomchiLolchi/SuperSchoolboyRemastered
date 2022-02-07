@@ -1,9 +1,13 @@
 package com.oftatech.superschoolboyremastered.activity
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -11,7 +15,6 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
@@ -29,18 +32,28 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.auth.api.Auth
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.images.ImageManager
+import com.google.android.gms.games.Games
 import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.ui.PrimaryTextButton
 import com.oftatech.superschoolboyremastered.ui.SecondaryTextButton
-import com.oftatech.superschoolboyremastered.ui.theme.Madang
 import com.oftatech.superschoolboyremastered.ui.theme.MainAppContent
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.viewmodel.GPGProfileViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class LoginActivity : ComponentActivity() {
+    companion object {
+        const val GPG_SIGN_IN = 100
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -55,6 +68,32 @@ class LoginActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == GPG_SIGN_IN) {
+            val result = data?.let { Auth.GoogleSignInApi.getSignInResultFromIntent(it) }
+            if (result?.isSuccess != true) {
+                var message = result!!.status.statusMessage
+                if (message == null || message.isEmpty()) {
+                    message = getString(R.string.gpg_error_text)
+                }
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+            } else {
+                val gpgProfileViewModel by viewModels<GPGProfileViewModel>()
+                val player = Games.getPlayersClient(this, result.signInAccount!!)
+                player.currentPlayer.addOnSuccessListener {
+                    it.hiResImageUri?.let { it1 ->
+                        ImageManager.create(this).loadImage({ uri, drawable, boolean ->
+                            gpgProfileViewModel.avatar.value = (drawable as BitmapDrawable).bitmap
+                        }, it1)
+                    } ?: run { gpgProfileViewModel.avatar.value = null }
+                    gpgProfileViewModel.username.value = it.displayName
+                }
+            }
+            onBackPressed()
+        }
+    }
 }
 
 @Preview
@@ -66,7 +105,9 @@ private fun LoginActivityScreenContent() {
         modifier = Modifier.fillMaxSize(),
     ) {
         Column(
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 20.dp),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
@@ -91,7 +132,9 @@ private fun LoginActivityScreenContent() {
         }
 
         Image(
-            modifier = Modifier.size(246.dp).align(Alignment.Center),
+            modifier = Modifier
+                .size(246.dp)
+                .align(Alignment.Center),
             painter = painterResource(id = R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
             contentDescription = stringResource(id = R.string.app_icon_text),
             contentScale = ContentScale.FillBounds,
@@ -109,7 +152,11 @@ private fun LoginActivityScreenContent() {
                     .fillMaxWidth(),
                 text = stringResource(id = R.string.log_in_with_google_play_games_text),
             ) {
-                activity.onBackPressed()
+                if (GoogleSignIn.getLastSignedInAccount(activity) == null) {
+                    gamesSignIn(activity)
+                } else {
+                    activity.onBackPressed()
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
             SecondaryTextButton(
@@ -121,4 +168,9 @@ private fun LoginActivityScreenContent() {
             }
         }
     }
+}
+
+private fun gamesSignIn(activity: Activity) {
+    val signInClient = GoogleSignIn.getClient(activity, GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN)
+    activity.startActivityForResult(signInClient.signInIntent, LoginActivity.GPG_SIGN_IN)
 }

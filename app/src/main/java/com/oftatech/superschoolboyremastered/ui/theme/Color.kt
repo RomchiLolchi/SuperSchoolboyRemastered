@@ -10,3 +10,6 @@ val RoyalBlue = Color(0xFF2F80ED)
 val Madang = Color(0xFFA0F09E)
 val WePeep = Color(0xFFF0C2DA)
 val Tacao = Color(0xFFF0BA92)
+
+val MintGreen = Color(0xFF87FFAD)
+val Red = Color(0xFFF50501)

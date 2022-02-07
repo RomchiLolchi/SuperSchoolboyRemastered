@@ -46,6 +46,5 @@ object Utils {
         }
     }
 
-    @Composable
     fun Color.toOldColor(): Int = android.graphics.Color.argb(this.alpha, this.red, this.green, this.blue)
 }
