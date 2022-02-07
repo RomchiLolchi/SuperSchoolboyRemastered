@@ -1,20 +1,27 @@
 package com.oftatech.superschoolboyremastered.ui
 
 import android.app.Activity
+import android.graphics.Bitmap
 import android.util.DisplayMetrics
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -31,11 +38,16 @@ import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.RequestConfiguration
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.tasks.Task
 import com.oftatech.superschoolboyremastered.ui.theme.Silver
 import com.oftatech.superschoolboyremastered.ui.theme.White
 import com.oftatech.superschoolboyremastered.ui.theme.robotoFontFamily
 import com.oftatech.superschoolboyremastered.R
+import com.oftatech.superschoolboyremastered.activity.LoginActivity
 import com.oftatech.superschoolboyremastered.activity.UIState
+import java.lang.reflect.TypeVariable
 import java.util.*
 
 @Composable
@@ -128,10 +140,21 @@ fun TextRadioButton(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        RadioButton(
-            selected = isSelected,
-            onClick = actionOnClick,
-        )
+        Column {
+            Box(
+                modifier = Modifier
+                    .size(15.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isSelected) MaterialTheme.colors.secondary else LocalContentColor.current.copy(
+                            alpha = LocalContentAlpha.current
+                        )
+                    )
+                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                        actionOnClick()
+                    }
+            )
+        }
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             modifier = Modifier
@@ -153,10 +176,33 @@ fun TextRadioButton(
 @Composable
 fun ProfileDrawerTab(
     modifier: Modifier = Modifier,
+    username: String,
+    avatar: Bitmap,
+    rank: String,
+    logouted: Boolean,
+    onLogoutedChange: (Boolean) -> Unit,
+    onUserDataDelete: () -> Unit,
 ) {
+    val activity = LocalContext.current as Activity
+    val logoutDialogState = remember { mutableStateOf(false) }
     Column(
         modifier = modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                if (logouted) {
+                    val signInClient =
+                        GoogleSignIn.getClient(activity, GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN)
+                    activity.startActivityForResult(
+                        signInClient.signInIntent,
+                        LoginActivity.GPG_SIGN_IN
+                    )
+                } else {
+                    logoutDialogState.value = true
+                }
+            },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(
@@ -166,22 +212,24 @@ fun ProfileDrawerTab(
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Image(
-                modifier = Modifier
-                    .padding(end = 14.dp)
-                    .size(80.dp)
-                    .clip(CircleShape),
-                painter = painterResource(id = R.drawable.superschoolboy_remastered_round_icon_with_inner_shadow),
-                contentDescription = stringResource(id = R.string.user_avatar_text),
-                contentScale = ContentScale.Crop,
-            )
+            if (!logouted) {
+                Image(
+                    modifier = Modifier
+                        .padding(end = 14.dp)
+                        .size(80.dp)
+                        .clip(CircleShape),
+                    bitmap = avatar.asImageBitmap(),
+                    contentDescription = stringResource(id = R.string.user_avatar_text),
+                    contentScale = ContentScale.Crop,
+                )
+            }
 
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.Start,
             ) {
                 Text(
-                    text = "romchi_lolchi",
+                    text = username,
                     fontFamily = robotoFontFamily,
                     fontWeight = FontWeight.Light,
                     fontStyle = FontStyle.Normal,
@@ -189,7 +237,7 @@ fun ProfileDrawerTab(
                 )
                 Text(
                     modifier = Modifier.padding(top = 7.dp),
-                    text = "rank: grandmaster",
+                    text = "${stringResource(id = R.string.rank_text)}: $rank",
                     fontFamily = robotoFontFamily,
                     fontWeight = FontWeight.Thin,
                     fontStyle = FontStyle.Normal,
@@ -202,6 +250,70 @@ fun ProfileDrawerTab(
                 .fillMaxWidth(),
             color = MaterialTheme.colors.secondary,
             thickness = 3.dp,
+        )
+    }
+
+    if (logoutDialogState.value) {
+        AlertDialog(
+            onDismissRequest = { logoutDialogState.value = false },
+            text = {
+                Text(
+                    text = stringResource(id = R.string.logout_gpg_text),
+                    fontFamily = robotoFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = FontStyle.Normal,
+                    fontSize = 19.sp,
+                )
+            },
+            buttons = {
+                Box(
+                    modifier = Modifier
+                        .padding(15.dp)
+                        .fillMaxWidth()
+                ) {
+                    TextButton(
+                        modifier = Modifier.align(Alignment.CenterStart),
+                        onClick = {
+                            logoutDialogState.value = false
+                        }
+                    ) {
+                        Text(
+                            modifier = Modifier.alpha(0.6F),
+                            text = stringResource(id = R.string.cancel_text),
+                            fontFamily = robotoFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontStyle = FontStyle.Normal,
+                            fontSize = 16.sp
+                        )
+                    }
+
+                    TextButton(
+                        modifier = Modifier.align(Alignment.CenterEnd),
+                        onClick = {
+                            onUserDataDelete()
+                            val signInClient =
+                                GoogleSignIn.getClient(
+                                    activity,
+                                    GoogleSignInOptions.DEFAULT_GAMES_SIGN_IN
+                                )
+                            signInClient
+                                .signOut()
+                                .addOnCompleteListener {
+                                    onLogoutedChange(true)
+                                }
+                            logoutDialogState.value = false
+                        }) {
+                        Text(
+                            text = stringResource(id = R.string.exit_text),
+                            fontFamily = robotoFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontStyle = FontStyle.Normal,
+                            fontSize = 16.sp,
+                            color = MaterialTheme.colors.secondary
+                        )
+                    }
+                }
+            }
         )
     }
 }
@@ -257,23 +369,23 @@ fun FullWidthAdaptiveBannerAds(
     AndroidView(
         modifier = modifier.fillMaxWidth(),
         factory = {
-        val adView = AdView(it)
-        //TODO Заменить adUnitId
-        adView.adUnitId = "ca-app-pub-3940256099942544/6300978111"
+            val adView = AdView(it)
+            adView.adUnitId = "ca-app-pub-3756145573922744/7298224334"
 
-        val display = activity.windowManager.defaultDisplay
-        val outMetrics = DisplayMetrics()
-        display.getMetrics(outMetrics)
+            val display = activity.windowManager.defaultDisplay
+            val outMetrics = DisplayMetrics()
+            display.getMetrics(outMetrics)
 
-        val density = outMetrics.density
-        val adWidthPixels = outMetrics.widthPixels.toFloat()
-        val adWidth = (adWidthPixels / density).toInt()
+            val density = outMetrics.density
+            val adWidthPixels = outMetrics.widthPixels.toFloat()
+            val adWidth = (adWidthPixels / density).toInt()
 
-        adView.adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(it, adWidth)
-        adView.loadAd(
-            AdRequest.Builder()
-                .build())
+            adView.adSize = AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(it, adWidth)
+            adView.loadAd(
+                AdRequest.Builder()
+                    .build()
+            )
 
-        adView
-    })
+            adView
+        })
 }

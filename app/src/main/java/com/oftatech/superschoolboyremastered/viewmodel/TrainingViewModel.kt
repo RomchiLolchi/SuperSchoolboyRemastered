@@ -1,18 +1,26 @@
 package com.oftatech.superschoolboyremastered.viewmodel
 
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import android.util.Log
+import androidx.lifecycle.*
+import com.oftatech.superschoolboyremastered.dao.SessionsSettingsSPDao
+import com.oftatech.superschoolboyremastered.util.Application
+import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
-import kotlin.concurrent.schedule
-import kotlin.concurrent.timer
 import kotlin.concurrent.timerTask
 
-@HiltViewModel
-class TrainingViewModel @Inject constructor() : ViewModel() {
-    var maximumTime = 50
+class TrainingViewModel(application: Application) : AndroidViewModel(application) {
+    private val sessionsSettingsViewModel = ViewModelProvider(application, object : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            return SessionsSettingsViewModel(SessionsSettingsSPDao(application.applicationContext)) as T
+        }
+    }).get(SessionsSettingsViewModel::class.java)
+    var maximumTime = sessionsSettingsViewModel.timer.value!!.getInStandardIntForm()
+    private var firstNumbers = ArrayList<Int>()
     val rightAnswers = MutableLiveData(0)
     val rightAnswersInRow = MutableLiveData(0)
     private val allRightAnswersInRow = arrayListOf(0)
@@ -24,8 +32,49 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
     private var rightAnswer = 0
     private var timer = Timer(true)
 
+    val isRightAnswersIconTintStandard = MutableLiveData(true)
+    val isWrongAnswersIconTintStandard = MutableLiveData(true)
+
+    init {
+        updateValuesFromSettings()
+        /*setupAutoUpdate()
+        for (pair in sessionsSettingsViewModel.numbers.value!!) {
+            if (pair.value) {
+                firstNumbers.add(pair.key)
+            }
+        }*/
+    }
+
+    fun updateValuesFromSettings() {
+        sessionsSettingsViewModel.updateSettingsData()
+        firstNumbers = ArrayList<Int>()
+        for (pair in sessionsSettingsViewModel.numbers.value!!) {
+            if (pair.value) {
+                firstNumbers.add(pair.key)
+            }
+        }
+        maximumTime = sessionsSettingsViewModel.timer.value!!.getInStandardIntForm()
+    }
+
+    /*private fun setupAutoUpdate() {
+        sessionsSettingsViewModel.timer.observeForever {
+            val oldMaximumTime = maximumTime
+            maximumTime = sessionsSettingsViewModel.timer.value!!.getInStandardIntForm()
+            Log.d("ViewModel debugging", "Maximum time has been changed due to change in external view model.\nOld value:$oldMaximumTime\nNew value:$maximumTime")
+        }
+        sessionsSettingsViewModel.numbers.observeForever {
+            val oldNumbers = sessionsSettingsViewModel.numbers
+            for (pair in it) {
+                if (pair.value) {
+                    firstNumbers.add(pair.key)
+                }
+            }
+            Log.d("ViewModel debugging", "Allowed numbers has been changed due to change in external view model.\nOld value:$oldNumbers\nNew value:${sessionsSettingsViewModel.numbers}")
+        }
+    }*/
+
     private fun generateQuestionAndAnswer() {
-        val firstNumber = (1..10).random()
+        val firstNumber = firstNumbers.random()
         val secondNumber = (1..10).random()
 
         question.postValue("${firstNumber}x$secondNumber")
@@ -49,9 +98,15 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
         if (parsedUserAnswer == rightAnswer.toLong()) {
             rightAnswers.postValue(rightAnswers.value!! + 1)
             allRightAnswersInRow[allRightAnswersInRow.lastIndex] = allRightAnswersInRow.last() + 1
+            viewModelScope.launch {
+                startRightAnswersTintAnimation()
+            }
         } else {
             wrongAnswers.postValue(wrongAnswers.value!! + 1)
             allRightAnswersInRow.add(0)
+            viewModelScope.launch {
+                startWrongAnswersTintAnimation()
+            }
         }
     }
 
@@ -101,5 +156,17 @@ class TrainingViewModel @Inject constructor() : ViewModel() {
             e.printStackTrace()
         }
         timer = Timer(true)
+    }
+
+    private suspend fun startRightAnswersTintAnimation() {
+        isRightAnswersIconTintStandard.value = false
+        delay(500)
+        isRightAnswersIconTintStandard.value = true
+    }
+
+    private suspend fun startWrongAnswersTintAnimation() {
+        isWrongAnswersIconTintStandard.value = false
+        delay(500)
+        isWrongAnswersIconTintStandard.value = true
     }
 }
