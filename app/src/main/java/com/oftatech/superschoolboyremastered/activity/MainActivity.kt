@@ -66,6 +66,7 @@ import com.oftatech.superschoolboyremastered.ui.theme.*
 import com.oftatech.superschoolboyremastered.util.TextHtmlTagHandler
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.util.Utils.containsValueTimes
 import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
 import com.oftatech.superschoolboyremastered.viewmodel.GPGProfileViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
@@ -187,6 +188,7 @@ private fun MainActivityScreenContent(
     val scaffoldState = rememberScaffoldState()
     val navController = rememberNavController()
     val bottomState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val activity = LocalContext.current as Activity
 
     val screensList = listOf(
         Screen.Training,
@@ -332,8 +334,12 @@ private fun MainActivityScreenContent(
                                 number = i.key,
                                 checked = i.value,
                                 onCheckedChange = {
-                                    numbers[i.key] = it
-                                    onWriteNewNumbers(numbers)
+                                    if (it || (!it && numbers.containsValueTimes(true) > 1)) {
+                                        numbers[i.key] = it
+                                        onWriteNewNumbers(numbers)
+                                    } else {
+                                        Toast.makeText(activity, R.string.need_more_than_one_number_text, Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 isActive = !ranked,
                             )

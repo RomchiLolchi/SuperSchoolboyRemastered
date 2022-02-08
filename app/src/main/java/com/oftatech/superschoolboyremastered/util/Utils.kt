@@ -47,4 +47,13 @@ object Utils {
     }
 
     fun Color.toOldColor(): Int = android.graphics.Color.argb(this.alpha, this.red, this.green, this.blue)
+
+    fun <T> Map<*, T>.containsValueTimes(value: T): Int {
+        if (this.isEmpty()) return 0
+        var counter = 0
+        this.forEach {
+            if (it.value == value) counter += 1
+        }
+        return counter
+    }
 }

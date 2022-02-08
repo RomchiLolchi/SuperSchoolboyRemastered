@@ -19,6 +19,7 @@
     <string name="ranked_text">Ranked</string>
     <string name="difficulty_text">Difficulty</string>
     <string name="numbers_text">Numbers</string>
+    <string name="need_more_than_one_number_text">At least one number must be chosen</string>
 
 
     <string name="exit_text">Exit</string>

@@ -100,4 +100,5 @@
     <string name="session_settings">Настройки сессии</string>
     <string name="difficulty_text">Сложность</string>
     <string name="numbers_text">Цифры</string>
+    <string name="need_more_than_one_number_text">Как минимум одна цифра должна быть выбрана</string>
 </resources>
