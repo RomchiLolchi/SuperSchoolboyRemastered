@@ -1,13 +1,15 @@
 package com.oftatech.superschoolboyremastered.activity
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
@@ -20,7 +22,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -36,9 +37,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -50,6 +52,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -57,6 +60,9 @@ import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.images.ImageManager
 import com.google.android.gms.games.Games
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -71,28 +77,38 @@ import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
 import com.oftatech.superschoolboyremastered.viewmodel.GPGProfileViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.text.DecimalFormat
-import kotlin.math.roundToInt
-import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        private const val UPDATE_REQUEST_CODE = 202
+        var screenToOpen = Screen.Training.route
+        lateinit var navController: NavHostController
+    }
+
     private lateinit var logouted: MutableState<Boolean>
 
+    @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        updateAppIfNeeded()
 
         val viewModel by viewModels<MainViewModel>()
         val statsViewModel by viewModels<StatisticsViewModel>()
         val gpgProfileViewModel by viewModels<GPGProfileViewModel>()
         val sessionSettingsViewModel by viewModels<SessionsSettingsViewModel>()
         setContent {
+             navController = rememberNavController()
+
             logouted = remember {
                 mutableStateOf(
                     GoogleSignIn.getLastSignedInAccount(this) == null || !GoogleSignIn.hasPermissions(
@@ -123,7 +139,8 @@ class MainActivity : ComponentActivity() {
                     numbers = sessionSettingsViewModel.numbers.observeAsState().value!!,
                     difficulty = sessionSettingsViewModel.difficulty.observeAsState().value!!,
                     onDifficultyChange = { sessionSettingsViewModel.difficulty.value = it },
-                    onWriteNewNumbers = { sessionSettingsViewModel.writeNewNumbers(it) }
+                    onWriteNewNumbers = { sessionSettingsViewModel.writeNewNumbers(it) },
+                    navController = navController,
                 )
             }
         }
@@ -161,6 +178,58 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        val sp = applicationContext.getSharedPreferences("open", Activity.MODE_PRIVATE)
+        if (sp.getBoolean("open", false)) {
+            screenToOpen = Screen.Statistics.route
+            sp.edit().remove("open").commit()
+
+            navController.navigate(screenToOpen) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+
+        val appUpdateManager = AppUpdateManagerFactory.create(applicationContext)
+        appUpdateManager
+            .appUpdateInfo
+            .addOnSuccessListener { appUpdateInfo ->
+                if (appUpdateInfo.updateAvailability()
+                    == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+                ) {
+                    appUpdateManager.startUpdateFlowForResult(
+                        appUpdateInfo,
+                        IMMEDIATE,
+                        this,
+                        UPDATE_REQUEST_CODE
+                    )
+                }
+            }
+    }
+
+    private fun updateAppIfNeeded() {
+        val appUpdateManager = AppUpdateManagerFactory.create(applicationContext)
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                && appUpdateInfo.isUpdateTypeAllowed(IMMEDIATE)
+            ) {
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo,
+                    IMMEDIATE,
+                    this,
+                    UPDATE_REQUEST_CODE
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -183,10 +252,10 @@ private fun MainActivityScreenContent(
     difficulty: Float,
     onDifficultyChange: (Float) -> Unit,
     onWriteNewNumbers: (SnapshotStateMap<Int, Boolean>) -> Unit,
+    navController: NavHostController,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
-    val navController = rememberNavController()
     val bottomState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
     val activity = LocalContext.current as Activity
 
@@ -196,6 +265,7 @@ private fun MainActivityScreenContent(
         Screen.Statistics,
         Screen.AdultInfo,
         Screen.KidsInfo,
+        Screen.MultiplicationTable,
         Screen.AboutApp
     )
 
@@ -215,7 +285,7 @@ private fun MainActivityScreenContent(
                     fontStyle = FontStyle.Normal,
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                /*Box(
+                Box(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
@@ -275,7 +345,7 @@ private fun MainActivityScreenContent(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(15.dp))*/
+                Spacer(modifier = Modifier.height(15.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -454,6 +524,12 @@ private fun MainActivityScreenContent(
                             stringResource(id = R.string.kids_info_content),
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
                         )
+                    )
+                }
+                composable(Screen.MultiplicationTable.route) {
+                    ImageScreen(
+                        header = stringResource(id = R.string.multiplication_table),
+                        image = BitmapFactory.decodeResource(activity.resources, R.drawable.multiplication_table).asImageBitmap()
                     )
                 }
                 composable(Screen.AboutApp.route) {
@@ -870,6 +946,27 @@ private fun TextScreen(
     }
 }
 
+@Composable
+private fun ImageScreen(
+    modifier: Modifier = Modifier,
+    header: String,
+    image: ImageBitmap
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 13.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        WindowHeader(text = header)
+        Spacer(modifier = Modifier.height(30.dp))
+        Image(modifier = Modifier.align(Alignment.CenterHorizontally).verticalScroll(scrollState), bitmap = image, contentDescription = header)
+    }
+}
+
 sealed class Screen(
     val route: String,
     val drawerImage: ImageVector,
@@ -882,6 +979,7 @@ sealed class Screen(
         Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
 
     object KidsInfo : Screen("kids_info", Icons.Outlined.ChildCare, R.string.info_for_kids)
+    object MultiplicationTable : Screen("multiplication_table", Icons.Outlined.Calculate, R.string.multiplication_table)
     object AboutApp : Screen("app_info", Icons.Outlined.Info, R.string.about_app)
 }
 

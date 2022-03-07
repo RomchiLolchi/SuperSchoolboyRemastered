@@ -1,5 +1,6 @@
 package com.oftatech.superschoolboyremastered.activity
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -59,7 +60,9 @@ class TrainingActivity : ComponentActivity() {
             return TrainingViewModel(application as Application) as T
         }
     } }
+    private val sessionSettingsViewModel by viewModels<SessionsSettingsViewModel>()
 
+    @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -102,15 +105,37 @@ class TrainingActivity : ComponentActivity() {
                         animateColorAsState(targetValue = Red)
                     }.value,
                 )
+                if (trainingViewModel.showEndingDialog.observeAsState().value == true) {
+                    trainingViewModel.showEndingDialog(
+                        onBackPressed = {
+                            trainingViewModel.showEndingDialog.value = false
+                            super.onBackPressed()
+                        },
+                        restartTraining = {
+                            finish()
+                            overridePendingTransition(0, 0)
+                            startActivity(intent)
+                            overridePendingTransition(0, 0)
+                        },
+                        goToStatistics = {
+                            applicationContext.getSharedPreferences("open", Activity.MODE_PRIVATE).edit().putBoolean("open", true).commit()
+                            super.onBackPressed()
+                        },
+                    )
+                }
             }
             trainingViewModel.completeTask(check = false)
         }
     }
 
     override fun onBackPressed() {
+        if (sessionSettingsViewModel.ranked.value!!) {
+            trainingViewModel.sendResultsToLeaderboard(trainingViewModel.rightAnswersInRow.value!!.toLong())
+        }
         trainingViewModel.stop()
         statsViewModel.writeStatsData(trainingViewModel)
-        super.onBackPressed()
+
+        trainingViewModel.showEndingDialog.value = true
     }
 }
 
@@ -271,7 +296,9 @@ private fun StatsBar(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -314,7 +341,9 @@ private fun StatsBar(
             }
 
             Row(
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 20.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(

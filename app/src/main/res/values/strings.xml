@@ -18,12 +18,31 @@
     <string name="session_settings">Session settings</string>
     <string name="ranked_text">Ranked</string>
     <string name="difficulty_text">Difficulty</string>
-    <string name="numbers_text">Numbers</string>
+    <string name="numbers_text">Multiplication tables for</string>
     <string name="need_more_than_one_number_text">At least one number must be chosen</string>
-
 
     <string name="exit_text">Exit</string>
     <string name="submit_text">Submit</string>
+    <string name="answer_is_too_big_text">I doubt that the correct answer will be so long…</string>
+    <string-array name="good_results_final_texts">
+        <item>Good job!</item>
+        <item>You did well!</item>
+        <item>Keep it up!</item>
+        <item>Excellent work!</item>
+    </string-array>
+    <string-array name="average_results_final_texts">
+        <item>Not bad!</item>
+        <item>You are doing well</item>
+    </string-array>
+    <string-array name="bad_results_final_texts">
+        <item>Practice some more…</item>
+        <item>Do not give up!</item>
+        <item>Cheer up!</item>
+        <item>Repeat the multiplication table</item>
+    </string-array>
+    <string name="restart_text">Restart</string>
+    <string name="to_statistics_text">To statistics</string>
+    <string name="close_text">Close</string>
 
     <string name="app_theming_text">App theming</string>
     <string name="ui_theme_text">UI Theme</string>
@@ -101,6 +120,7 @@
     <string name="statistics_text">Statistics</string>
     <string name="info_for_adults">Information for adults</string>
     <string name="info_for_kids">Information for kids</string>
+    <string name="multiplication_table">Multiplication table</string>
     <string name="about_app">About app</string>
 
     <!-- Content description text resources -->
