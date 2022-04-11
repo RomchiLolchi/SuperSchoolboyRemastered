@@ -447,24 +447,42 @@ private fun MainActivityScreenContent(
                 }
             },
             drawerContent = {
-                MainActivityDrawerContent(
-                    screens = screensList,
-                    navController = navController,
-                    drawerState = scaffoldState.drawerState,
-                    username = gpgProfileViewModel.username.observeAsState().value!!,
-                    avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
-                        val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
-                        val canvas = android.graphics.Canvas(bmp)
-                        canvas.drawColor(android.graphics.Color.TRANSPARENT)
-                        bmp
-                    },
-                    rank = gpgProfileViewModel.rank.observeAsState().value!!,
-                    onUserDataDelete = {
-                        gpgProfileViewModel.deleteUserData()
-                    },
-                    logouted = logouted,
-                    onLogoutedChange = { onLogoutedChange(it) },
-                )
+                Box(Modifier.fillMaxSize()) {
+                    MainActivityDrawerContent(
+                        modifier = Modifier.align(Alignment.TopStart),
+                        screens = screensList,
+                        navController = navController,
+                        drawerState = scaffoldState.drawerState,
+                        username = gpgProfileViewModel.username.observeAsState().value!!,
+                        avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
+                            val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                            val canvas = android.graphics.Canvas(bmp)
+                            canvas.drawColor(android.graphics.Color.TRANSPARENT)
+                            bmp
+                        },
+                        rank = gpgProfileViewModel.rank.observeAsState().value!!,
+                        onUserDataDelete = {
+                            gpgProfileViewModel.deleteUserData()
+                        },
+                        logouted = logouted,
+                        onLogoutedChange = { onLogoutedChange(it) },
+                    )
+                    Icon(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(start = 12.dp, bottom = 12.dp)
+                            .align(Alignment.BottomStart)
+                            .clickable {
+                                val i = Intent(Intent.ACTION_SEND)
+                                i.type = "text/plain"
+                                i.putExtra(Intent.EXTRA_SUBJECT, activity.resources.getString(R.string.sharing_url_text))
+                                i.putExtra(Intent.EXTRA_TEXT, "${activity.resources.getString(R.string.sharing_text)}\n\nhttps://play.google.com/store/apps/details?id=com.oftatech.superschoolboyremastered")
+                                startActivity(activity, Intent.createChooser(i, activity.resources.getString(R.string.sharing_url_text)), null)
+                            },
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share app"
+                    )
+                }
             },
             drawerBackgroundColor = MaterialTheme.colors.background,
             drawerShape = RectangleShape,

@@ -119,7 +119,16 @@
         <item>Не унывай!</item>
         <item>Повтори таблицу умножения</item>
     </string-array>
+    <string name="awful_result_final_text">0 правильных ответов… Мощно…</string>
     <string name="restart_text">Повторить</string>
     <string name="close_text">Закрыть</string>
     <string name="to_statistics_text">В статистику</string>
+    <string name="session_restrictions_text">Ограничения сессий</string>
+    <string name="amount_of_examples_text">Максимальное количество примеров</string>
+    <string name="time_spent_text">Потраченное время</string>
+    <string name="value_between_text">Значение должно быть между</string>
+    <string name="and_text">и</string>
+    <string name="enable_text">Включить</string>
+    <string name="sharing_url_text">Отправка ссылки</string>
+    <string name="sharing_text">Скачайте "Супер Школяр Remastered" уже сегодня!</string>
 </resources>

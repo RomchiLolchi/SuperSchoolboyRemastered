@@ -58,6 +58,12 @@
     <string name="getting_achievements_text">Getting achievements</string>
     <string name="on_text">On</string>
     <string name="off_text">Off</string>
+    <string name="session_restrictions_text">Session restrictions</string>
+    <string name="amount_of_examples_text">Max amount of examples</string>
+    <string name="time_spent_text">Time spent</string>
+    <string name="value_between_text">Value must be between</string>
+    <string name="and_text">and</string>
+    <string name="enable_text">Enable</string>
 
     <string name="empty_so_far_text">So far it\'s empty…</string>
 
@@ -133,4 +139,8 @@
     <string name="timer_text">Timer</string>
     <string name="right_answers_text">Right answers</string>
     <string name="wrong_answers_text">Wrong answers</string>
+    <string name="awful_result_final_text">0 right answers... How?...</string>
+
+    <string name="sharing_url_text">Sharing URL</string>
+    <string name="sharing_text">Download Super Schoolboy Remastered now!</string>
 </resources>

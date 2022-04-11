@@ -150,11 +150,51 @@ fun TextRadioButton(
                             alpha = LocalContentAlpha.current
                         )
                     )
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
                         actionOnClick()
                     }
             )
         }
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            modifier = Modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    actionOnClick()
+                },
+            text = text,
+            fontFamily = robotoFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+        )
+    }
+}
+
+@Composable
+fun TextCheckbox(
+    modifier: Modifier = Modifier,
+    text: String,
+    isSelected: Boolean,
+    actionOnClick: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                actionOnClick()
+            },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = isSelected, onCheckedChange = { actionOnClick() })
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             modifier = Modifier
