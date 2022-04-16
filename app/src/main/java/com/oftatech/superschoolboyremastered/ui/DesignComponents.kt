@@ -3,6 +3,8 @@ package com.oftatech.superschoolboyremastered.ui
 import android.app.Activity
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
+import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -111,14 +113,17 @@ fun SecondaryTextButton(
 fun WindowHeader(
     modifier: Modifier = Modifier,
     text: String,
+    offset: Float,
 ) {
+    var coefficient = 100F//remember { mutableStateOf(100F) }
+    coefficient = (coefficient + offset).coerceIn(50F, 100F)
     Text(
         modifier = modifier,
         text = text,
         fontFamily = robotoFontFamily,
         fontWeight = FontWeight.Bold,
         fontStyle = FontStyle.Normal,
-        fontSize = 48.sp,
+        fontSize = animateFloatAsState(48 * (coefficient/100)).value.sp,
     )
 }
 

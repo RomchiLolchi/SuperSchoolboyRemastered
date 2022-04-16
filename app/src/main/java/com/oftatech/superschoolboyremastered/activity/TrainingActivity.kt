@@ -50,9 +50,16 @@ import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.viewmodel.*
 import dagger.hilt.android.AndroidEntryPoint
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
+import com.yandex.metrica.impl.ob.va
+import java.util.*
 
 @AndroidEntryPoint
 class TrainingActivity : ComponentActivity() {
+
+    companion object {
+        var restrictionTimer = Timer()
+        var examplesAmountRestriction = -1
+    }
 
     private val statsViewModel by viewModels<StatisticsViewModel>()
     private val trainingViewModel by viewModels<TrainingViewModel>() { object : ViewModelProvider.Factory {
@@ -69,6 +76,7 @@ class TrainingActivity : ComponentActivity() {
         trainingViewModel.updateValuesFromSettings()
 
         val mainViewModel by viewModels<MainViewModel>()
+        checkAndApplyRestrictions()
         setContent {
             MainAppContent(
                 darkTheme = Utils.isDarkTheme(mainViewModel.appTheme.observeAsState().value!!),
@@ -92,7 +100,7 @@ class TrainingActivity : ComponentActivity() {
                         trainingViewModel.clearUserAnswer()
                     },
                     actionOnSubmitPressed = {
-                        trainingViewModel.completeTask()
+                        trainingViewModel.completeTask(activity = this, restriction = examplesAmountRestriction)
                     },
                     rightAnswersIconTint = if (trainingViewModel.isRightAnswersIconTintStandard.observeAsState().value == true) {
                         animateColorAsState(targetValue = standardColor)
@@ -124,18 +132,37 @@ class TrainingActivity : ComponentActivity() {
                     )
                 }
             }
-            trainingViewModel.completeTask(check = false)
+            trainingViewModel.completeTask(check = false, activity = this, restriction = examplesAmountRestriction)
         }
     }
 
     override fun onBackPressed() {
+        with(restrictionTimer) {
+            cancel()
+            purge()
+        }
         if (sessionSettingsViewModel.ranked.value!!) {
             trainingViewModel.sendResultsToLeaderboard(trainingViewModel.rightAnswersInRow.value!!.toLong())
         }
-        trainingViewModel.stop()
-        statsViewModel.writeStatsData(trainingViewModel)
+        runOnUiThread {
+            trainingViewModel.stop()
+            statsViewModel.writeStatsData(trainingViewModel)
 
-        trainingViewModel.showEndingDialog.value = true
+            trainingViewModel.showEndingDialog.value = true
+        }
+    }
+
+    private fun checkAndApplyRestrictions() {
+        if (sessionSettingsViewModel.amountOfExamplesRestrictionActive.value!!) {
+            examplesAmountRestriction = sessionSettingsViewModel.amountOfExamplesRestriction.value!!.getInStandardIntForm()
+        }
+        if (sessionSettingsViewModel.timerRestrictionActive.value!!) {
+            restrictionTimer.schedule(object : TimerTask() {
+                override fun run() {
+                    onBackPressed()
+                }
+            }, sessionSettingsViewModel.timerRestriction.value!!.getInStandardIntForm() * 60000L)
+        }
     }
 }
 

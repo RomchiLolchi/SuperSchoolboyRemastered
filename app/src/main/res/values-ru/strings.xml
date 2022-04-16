@@ -81,7 +81,7 @@
         v0.1pr
     </string>
     <string name="back_text">Назад</string>
-    <string name="timer_text">Таймер</string>
+    <string name="timer_text">Максимальное время на ответ</string>
     <string name="right_answers_text">Правильные ответы</string>
     <string name="wrong_answers_text">Неправильные ответы</string>
     <string name="user_avatar_text">Аватар пользователя</string>

@@ -52,4 +52,36 @@ class SessionsSettingsSPDao(private val context: Context) {
     fun writeDifficulty(newDifficulty: Float) {
         context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).edit().putFloat(DIFFICULTY_SP_KEY, newDifficulty).apply()
     }
+
+    fun readAmountOfExamplesRestrictionActive(): Boolean {
+        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getBoolean("amountOfExamplesRestrictionActive", false)
+    }
+
+    fun writeAmountOfExamplesRestrictionActive(newValue: Boolean) {
+        context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).edit().putBoolean("amountOfExamplesRestrictionActive", newValue).apply()
+    }
+
+    fun readTimerRestrictionActive(): Boolean {
+        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getBoolean("timerRestrictionActive", false)
+    }
+
+    fun writeTimerRestrictionActive(newValue: Boolean) {
+        context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).edit().putBoolean("timerRestrictionActive", newValue).apply()
+    }
+
+    fun readAmountOfExamplesRestriction(): Float {
+        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getFloat("amountOfExamplesRestriction", 0.01F)
+    }
+
+    fun writeAmountOfExamplesRestriction(newValue: Float) {
+        context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).edit().putFloat("amountOfExamplesRestriction", newValue).apply()
+    }
+
+    fun readTimerRestriction(): Float {
+        return context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).getFloat("timerRestriction", 1F)
+    }
+
+    fun writeTimerRestriction(newValue: Float) {
+        context.getSharedPreferences(DEFAULT_SP_NAME, Context.MODE_PRIVATE).edit().putFloat("timerRestriction", newValue).apply()
+    }
 }

@@ -136,10 +136,10 @@
     <string name="user_avatar_text">User\'s avatar</string>
     <string name="drawer_tab_icon_text">drawer tab icon</string>
     <string name="back_text">Back</string>
-    <string name="timer_text">Timer</string>
+    <string name="timer_text">Maximum time for answer</string>
     <string name="right_answers_text">Right answers</string>
     <string name="wrong_answers_text">Wrong answers</string>
-    <string name="awful_result_final_text">0 right answers... How?...</string>
+    <string name="awful_result_final_text">0 right answers… How?…</string>
 
     <string name="sharing_url_text">Sharing URL</string>
     <string name="sharing_text">Download Super Schoolboy Remastered now!</string>

@@ -1,5 +1,6 @@
 package com.oftatech.superschoolboyremastered.viewmodel
 
+import android.app.Activity
 import android.content.Context
 import android.content.res.Resources
 import android.inputmethodservice.Keyboard
@@ -32,6 +33,7 @@ import com.oftatech.superschoolboyremastered.R
 import com.oftatech.superschoolboyremastered.dao.SessionsSettingsSPDao
 import com.oftatech.superschoolboyremastered.util.Application
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
+import com.yandex.metrica.YandexMetrica
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -60,6 +62,7 @@ class TrainingViewModel(val application: Application) : AndroidViewModel(applica
     private var rightAnswer = 0
     private var timer = Timer(true)
     val showEndingDialog = MutableLiveData(false)
+    private var allAnswers = 0
 
     val isRightAnswersIconTintStandard = MutableLiveData(true)
     val isWrongAnswersIconTintStandard = MutableLiveData(true)
@@ -116,6 +119,7 @@ class TrainingViewModel(val application: Application) : AndroidViewModel(applica
             0
         }
 
+        allAnswers += 1
         if (parsedUserAnswer == rightAnswer.toLong()) {
             rightAnswers.postValue(rightAnswers.value!! + 1)
             allRightAnswersInRow[allRightAnswersInRow.lastIndex] = allRightAnswersInRow.last() + 1
@@ -163,17 +167,20 @@ class TrainingViewModel(val application: Application) : AndroidViewModel(applica
         userAnswer.postValue("")
     }
 
-    fun completeTask(check: Boolean = true) {
+    fun completeTask(check: Boolean = true, activity: Activity, restriction: Int) {
         if (check) checkAndAppend()
         stop()
         clearUserAnswer()
         timeLeft.postValue(maximumTime)
+        if (restriction != -1 && allAnswers == restriction) {
+            activity.onBackPressed()
+        }
         generateQuestionAndAnswer()
         timer.schedule(timerTask {
             timeLeft.postValue(timeLeft.value!! - 1)
         }, 1000L, 1000L)
         timer.schedule(timerTask {
-            completeTask()
+            completeTask(activity = activity, restriction = restriction)
         }, maximumTime * 1000L)
     }
 
@@ -279,6 +286,7 @@ class TrainingViewModel(val application: Application) : AndroidViewModel(applica
                     TextButton(onClick = {
                         FirebaseAnalytics.getInstance(application.applicationContext)
                             .logEvent("training_session_start", null)
+                        YandexMetrica.reportEvent("training_session_start")
                         restartTraining()
                     }) {
                         Text(
@@ -295,14 +303,15 @@ class TrainingViewModel(val application: Application) : AndroidViewModel(applica
 
     private fun getPercentageOfRightAnswers(rightAnswers: Int, allAnswers: Int): Int {
         if (allAnswers == 0) return 0
-        return (rightAnswers / allAnswers) * 100
+        return ((rightAnswers.toFloat() / allAnswers.toFloat()) * 100).toInt()
     }
 
     private fun getDialogHeader(resources: Resources, rightAnswersPercentage: Int): String {
         val stringArray = when {
             rightAnswersPercentage >= 80 -> resources.getStringArray(R.array.good_results_final_texts)
             rightAnswersPercentage in 50..79 -> resources.getStringArray(R.array.average_results_final_texts)
-            rightAnswersPercentage < 50 -> resources.getStringArray(R.array.bad_results_final_texts)
+            rightAnswersPercentage < 50 && rightAnswersPercentage != 0 -> resources.getStringArray(R.array.bad_results_final_texts)
+            rightAnswersPercentage == 0 -> arrayOf(resources.getString(R.string.awful_result_final_text))
             else -> throw RuntimeException("Impossible.")
         }
         return stringArray.random()

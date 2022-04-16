@@ -9,7 +9,6 @@ import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.text.Html
 import android.text.Spanned
@@ -22,13 +21,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -36,11 +39,15 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -49,6 +56,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -79,10 +87,12 @@ import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
+import com.yandex.metrica.YandexMetrica
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.text.DecimalFormat
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -141,6 +151,7 @@ class MainActivity : ComponentActivity() {
                     onDifficultyChange = { sessionSettingsViewModel.difficulty.value = it },
                     onWriteNewNumbers = { sessionSettingsViewModel.writeNewNumbers(it) },
                     navController = navController,
+                    sessionsSettingsViewModel = sessionSettingsViewModel
                 )
             }
         }
@@ -253,6 +264,7 @@ private fun MainActivityScreenContent(
     onDifficultyChange: (Float) -> Unit,
     onWriteNewNumbers: (SnapshotStateMap<Int, Boolean>) -> Unit,
     navController: NavHostController,
+    sessionsSettingsViewModel: SessionsSettingsViewModel,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
@@ -268,6 +280,20 @@ private fun MainActivityScreenContent(
         Screen.MultiplicationTable,
         Screen.AboutApp
     )
+
+    val offset = remember { mutableStateOf(0F) }
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                offset.value += delta
+                offset.value = offset.value.coerceIn(-100F, 100F)
+
+                return Offset.Zero
+            }
+        }
+    }
 
     ModalBottomSheetLayout(
         sheetContent = {
@@ -416,12 +442,110 @@ private fun MainActivityScreenContent(
                         }
                     }
                 }
+                /*Spacer(modifier = Modifier.height(15.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.session_restrictions_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Spacer(modifier = Modifier.height(7.dp))
+                    Text(
+                        text = stringResource(id = R.string.amount_of_examples_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Spacer(modifier = Modifier.height(7.dp))
+                        TextCheckbox(text = stringResource(id = R.string.enable_text), isSelected = sessionsSettingsViewModel.amountOfExamplesRestrictionActive.observeAsState().value!!) {
+                            sessionsSettingsViewModel.amountOfExamplesRestrictionActive.value = !sessionsSettingsViewModel.amountOfExamplesRestrictionActive.value!!
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Slider(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .width(300.dp),
+                                value = sessionsSettingsViewModel.amountOfExamplesRestriction.observeAsState().value!!,
+                                onValueChange = { sessionsSettingsViewModel.amountOfExamplesRestriction.value = it },
+                                valueRange = 0.01f..1f,
+                                enabled = sessionsSettingsViewModel.amountOfExamplesRestrictionActive.observeAsState().value!!,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = MaterialTheme.colors.secondary,
+                                    activeTrackColor = MaterialTheme.colors.secondary,
+                                    activeTickColor = MaterialTheme.colors.secondary,
+                                ),
+                            )
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                                text = "${sessionsSettingsViewModel.amountOfExamplesRestriction.observeAsState().value!!.getInStandardIntForm()}",
+                                fontFamily = robotoFontFamily,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontStyle = FontStyle.Normal,
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(7.dp))
+                    Text(
+                        text = stringResource(id = R.string.time_spent_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Spacer(modifier = Modifier.height(7.dp))
+                        TextCheckbox(text = stringResource(id = R.string.enable_text), isSelected = sessionsSettingsViewModel.timerRestrictionActive.observeAsState().value!!) {
+                            sessionsSettingsViewModel.timerRestrictionActive.value = !sessionsSettingsViewModel.timerRestrictionActive.value!!
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Slider(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .width(300.dp),
+                                value = sessionsSettingsViewModel.timerRestriction.observeAsState().value!!,
+                                onValueChange = { sessionsSettingsViewModel.timerRestriction.value = it },
+                                valueRange = 0.01f..0.6f,
+                                enabled = sessionsSettingsViewModel.timerRestrictionActive.observeAsState().value!!,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = MaterialTheme.colors.secondary,
+                                    activeTrackColor = MaterialTheme.colors.secondary,
+                                    activeTickColor = MaterialTheme.colors.secondary,
+                                ),
+                            )
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                                text = "${sessionsSettingsViewModel.timerRestriction.observeAsState().value!!.getInStandardIntForm()}",
+                                fontFamily = robotoFontFamily,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontStyle = FontStyle.Normal,
+                            )
+                        }
+                    }
+                }*/
             }
         },
         sheetState = bottomState,
     ) {
         Scaffold(
-            modifier = modifier,
+            modifier = modifier.nestedScroll(nestedScrollConnection),
             topBar = {
                 Row(
                     modifier = Modifier
@@ -516,14 +640,16 @@ private fun MainActivityScreenContent(
                         uiThemeState = uiThemeState,
                         onUIThemeStateChange = onUIThemeStateChange,
                         accentColor = accentColor,
-                        onAccentColorChange = onAccentColorChange
+                        onAccentColorChange = onAccentColorChange,
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.Statistics.route) {
                     StatisticsScreen(
                         modifier = Modifier
                             .padding(paddingValues)
-                            .padding(horizontal = 13.dp), statsViewModel = statsViewModel
+                            .padding(horizontal = 13.dp), statsViewModel = statsViewModel,
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.AdultInfo.route) {
@@ -532,7 +658,8 @@ private fun MainActivityScreenContent(
                         text = Html.fromHtml(
                             stringResource(id = R.string.adult_info_content),
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
-                        )
+                        ),
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.KidsInfo.route) {
@@ -541,13 +668,15 @@ private fun MainActivityScreenContent(
                         text = Html.fromHtml(
                             stringResource(id = R.string.kids_info_content),
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
-                        )
+                        ),
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.MultiplicationTable.route) {
                     ImageScreen(
                         header = stringResource(id = R.string.multiplication_table),
-                        image = BitmapFactory.decodeResource(activity.resources, R.drawable.multiplication_table).asImageBitmap()
+                        image = BitmapFactory.decodeResource(activity.resources, R.drawable.multiplication_table).asImageBitmap(),
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.AboutApp.route) {
@@ -558,7 +687,8 @@ private fun MainActivityScreenContent(
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM,
                             null,
                             TextHtmlTagHandler(MaterialTheme.colors.secondary)
-                        )
+                        ),
+                        offset = offset.value,
                     )
                 }
             }
@@ -663,6 +793,7 @@ private fun SettingsScreen(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
+    offset: Float,
 ) {
     Column(
         modifier = modifier
@@ -670,7 +801,7 @@ private fun SettingsScreen(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
     ) {
-        WindowHeader(text = stringResource(id = R.string.settings_text))
+        WindowHeader(text = stringResource(id = R.string.settings_text), offset = offset)
         Spacer(modifier = Modifier.height(30.dp))
         LazyColumn {
             item {
@@ -802,6 +933,7 @@ private fun SettingsPart(
 private fun StatisticsScreen(
     modifier: Modifier = Modifier,
     statsViewModel: StatisticsViewModel,
+    offset: Float,
 ) {
     statsViewModel.updateStatsData()
 
@@ -812,7 +944,8 @@ private fun StatisticsScreen(
         verticalArrangement = Arrangement.Top,
     ) {
         WindowHeader(
-            text = stringResource(id = R.string.statistics_text)
+            text = stringResource(id = R.string.statistics_text),
+            offset = offset
         )
         when (statsViewModel.isEmpty()) {
             true -> PlugScreen()
@@ -922,6 +1055,7 @@ private fun TextScreen(
     modifier: Modifier = Modifier,
     header: String,
     text: Spanned,
+    offset: Float,
 ) {
     val scrollState = rememberScrollState()
     val onBackground = MaterialTheme.colors.onBackground.toOldColor()
@@ -948,7 +1082,7 @@ private fun TextScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        WindowHeader(text = header)
+        WindowHeader(text = header, offset = offset)
         Spacer(modifier = Modifier.height(30.dp))
         AndroidView(modifier = Modifier.verticalScroll(scrollState),
             factory = {
@@ -968,7 +1102,8 @@ private fun TextScreen(
 private fun ImageScreen(
     modifier: Modifier = Modifier,
     header: String,
-    image: ImageBitmap
+    image: ImageBitmap,
+    offset: Float,
 ) {
     val scrollState = rememberScrollState()
 
@@ -979,9 +1114,11 @@ private fun ImageScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        WindowHeader(text = header)
+        WindowHeader(text = header, offset = offset)
         Spacer(modifier = Modifier.height(30.dp))
-        Image(modifier = Modifier.align(Alignment.CenterHorizontally).verticalScroll(scrollState), bitmap = image, contentDescription = header)
+        Image(modifier = Modifier
+            .align(Alignment.CenterHorizontally)
+            .verticalScroll(scrollState), bitmap = image, contentDescription = header)
     }
 }
 
@@ -1003,6 +1140,7 @@ sealed class Screen(
 
 private fun openTrainingActivity(context: Context) {
     FirebaseAnalytics.getInstance(context).logEvent("training_session_start", null)
+    YandexMetrica.reportEvent("training_session_start")
     context.startActivity(Intent(context, TrainingActivity::class.java))
 }
 
@@ -1024,7 +1162,7 @@ private fun MainActivityDrawerContent(
 
     LazyColumn(
         modifier = modifier
-            .fillMaxSize(),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
