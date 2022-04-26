@@ -37,6 +37,10 @@ class SessionsSettingsViewModel @Inject constructor(private val spDao: SessionsS
         )
     )
     val difficulty = MutableLiveData(0.01f)
+    val amountOfExamplesRestrictionActive = MutableLiveData(false)
+    val amountOfExamplesRestriction = MutableLiveData(0.01F)
+    val timerRestrictionActive = MutableLiveData(false)
+    val timerRestriction = MutableLiveData(1F) //Minutes
 
     init {
         updateSettingsData()
@@ -48,6 +52,10 @@ class SessionsSettingsViewModel @Inject constructor(private val spDao: SessionsS
         timer.value = spDao.readTimer()
         numbers.value = spDao.readNumbers()
         difficulty.value = spDao.readDifficulty()
+        amountOfExamplesRestrictionActive.value = spDao.readAmountOfExamplesRestrictionActive()
+        amountOfExamplesRestriction.value = spDao.readAmountOfExamplesRestriction()
+        timerRestrictionActive.value = spDao.readTimerRestrictionActive()
+        timerRestriction.value = spDao.readTimerRestriction()
     }
 
     fun writeNewNumbers(newNumbers: SnapshotStateMap<Int, Boolean>) {
@@ -66,6 +74,18 @@ class SessionsSettingsViewModel @Inject constructor(private val spDao: SessionsS
         }
         difficulty.observeForever {
             spDao.writeDifficulty(it)
+        }
+        amountOfExamplesRestrictionActive.observeForever {
+            spDao.writeAmountOfExamplesRestrictionActive(it)
+        }
+        amountOfExamplesRestriction.observeForever {
+            spDao.writeAmountOfExamplesRestriction(it)
+        }
+        timerRestrictionActive.observeForever {
+            spDao.writeTimerRestrictionActive(it)
+        }
+        timerRestriction.observeForever {
+            spDao.writeTimerRestriction(it)
         }
     }
 }

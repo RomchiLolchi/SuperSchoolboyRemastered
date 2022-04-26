@@ -9,10 +9,11 @@
         <item name="colorSecondary">@color/teal_200</item>
         <item name="colorSecondaryVariant">@color/teal_200</item>
         <item name="colorOnSecondary">@color/black</item>
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+        <item name="android:statusBarColor">@color/mine_shaft</item>
+        <item name="android:navigationBarColor">@color/mine_shaft</item>
+        <item name="android:navigationBarDividerColor" tools:targetApi="o_mr1">@color/mine_shaft</item>
     </style>
 </resources>
