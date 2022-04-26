@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Google Play game services IDs. Save this file as res/values/games-ids.xml in your project.-->
+<resources>
+    <!--app_id-->
+    <string name="app_id" translatable="false">287770323567</string>
+    <!--package_name-->
+    <string name="package_name" translatable="false">com.oftatech.superschoolboyremastered</string>
+    <!--leaderboard Maximum right answers in row on 3rd difficulty-->
+    <string name="leaderboard_maximum_right_answers_in_row_on_3rd_difficulty" translatable="false">CgkI79TKg7AIEAIQAQ</string>
+    <!--leaderboard Maximum right answers in row on 2nd difficulty-->
+    <string name="leaderboard_maximum_right_answers_in_row_on_2nd_difficulty" translatable="false">CgkI79TKg7AIEAIQAg</string>
+    <!--leaderboard Maximum right answers in row on 1st difficulty-->
+    <string name="leaderboard_maximum_right_answers_in_row_on_1st_difficulty" translatable="false">CgkI79TKg7AIEAIQAw</string>
+</resources>

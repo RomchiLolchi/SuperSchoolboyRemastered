@@ -1,12 +1,13 @@
 package com.oftatech.superschoolboyremastered.activity
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.ColorStateList
-import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.text.Html
@@ -20,14 +21,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.foundation.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -35,10 +39,15 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -47,9 +56,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.res.ResourcesCompat
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -57,6 +68,9 @@ import com.google.android.gms.auth.api.Auth
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.images.ImageManager
 import com.google.android.gms.games.Games
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -66,32 +80,45 @@ import com.oftatech.superschoolboyremastered.ui.theme.*
 import com.oftatech.superschoolboyremastered.util.TextHtmlTagHandler
 import com.oftatech.superschoolboyremastered.util.Utils
 import com.oftatech.superschoolboyremastered.util.Utils.appSetup
+import com.oftatech.superschoolboyremastered.util.Utils.containsValueTimes
 import com.oftatech.superschoolboyremastered.util.Utils.toOldColor
 import com.oftatech.superschoolboyremastered.viewmodel.GPGProfileViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.MainViewModel
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel
+import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
 import com.oftatech.superschoolboyremastered.viewmodel.StatisticsViewModel
+import com.yandex.metrica.YandexMetrica
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.io.Serializable
 import java.text.DecimalFormat
-import kotlin.math.roundToInt
-import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        private const val UPDATE_REQUEST_CODE = 202
+        var screenToOpen = Screen.Training.route
+        lateinit var navController: NavHostController
+    }
+
     private lateinit var logouted: MutableState<Boolean>
 
+    @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+        updateAppIfNeeded()
 
         val viewModel by viewModels<MainViewModel>()
         val statsViewModel by viewModels<StatisticsViewModel>()
         val gpgProfileViewModel by viewModels<GPGProfileViewModel>()
         val sessionSettingsViewModel by viewModels<SessionsSettingsViewModel>()
         setContent {
+             navController = rememberNavController()
+
             logouted = remember {
                 mutableStateOf(
                     GoogleSignIn.getLastSignedInAccount(this) == null || !GoogleSignIn.hasPermissions(
@@ -122,7 +149,9 @@ class MainActivity : ComponentActivity() {
                     numbers = sessionSettingsViewModel.numbers.observeAsState().value!!,
                     difficulty = sessionSettingsViewModel.difficulty.observeAsState().value!!,
                     onDifficultyChange = { sessionSettingsViewModel.difficulty.value = it },
-                    onWriteNewNumbers = { sessionSettingsViewModel.writeNewNumbers(it) }
+                    onWriteNewNumbers = { sessionSettingsViewModel.writeNewNumbers(it) },
+                    navController = navController,
+                    sessionsSettingsViewModel = sessionSettingsViewModel
                 )
             }
         }
@@ -160,6 +189,58 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+
+        val sp = applicationContext.getSharedPreferences("open", Activity.MODE_PRIVATE)
+        if (sp.getBoolean("open", false)) {
+            screenToOpen = Screen.Statistics.route
+            sp.edit().remove("open").commit()
+
+            navController.navigate(screenToOpen) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+
+        val appUpdateManager = AppUpdateManagerFactory.create(applicationContext)
+        appUpdateManager
+            .appUpdateInfo
+            .addOnSuccessListener { appUpdateInfo ->
+                if (appUpdateInfo.updateAvailability()
+                    == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
+                ) {
+                    appUpdateManager.startUpdateFlowForResult(
+                        appUpdateInfo,
+                        IMMEDIATE,
+                        this,
+                        UPDATE_REQUEST_CODE
+                    )
+                }
+            }
+    }
+
+    private fun updateAppIfNeeded() {
+        val appUpdateManager = AppUpdateManagerFactory.create(applicationContext)
+        val appUpdateInfoTask = appUpdateManager.appUpdateInfo
+
+        appUpdateInfoTask.addOnSuccessListener { appUpdateInfo ->
+            if (appUpdateInfo.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                && appUpdateInfo.isUpdateTypeAllowed(IMMEDIATE)
+            ) {
+                appUpdateManager.startUpdateFlowForResult(
+                    appUpdateInfo,
+                    IMMEDIATE,
+                    this,
+                    UPDATE_REQUEST_CODE
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -182,11 +263,13 @@ private fun MainActivityScreenContent(
     difficulty: Float,
     onDifficultyChange: (Float) -> Unit,
     onWriteNewNumbers: (SnapshotStateMap<Int, Boolean>) -> Unit,
+    navController: NavHostController,
+    sessionsSettingsViewModel: SessionsSettingsViewModel,
 ) {
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState = rememberScaffoldState()
-    val navController = rememberNavController()
     val bottomState = rememberModalBottomSheetState(ModalBottomSheetValue.Hidden)
+    val activity = LocalContext.current as Activity
 
     val screensList = listOf(
         Screen.Training,
@@ -194,8 +277,23 @@ private fun MainActivityScreenContent(
         Screen.Statistics,
         Screen.AdultInfo,
         Screen.KidsInfo,
+        Screen.MultiplicationTable,
         Screen.AboutApp
     )
+
+    val offset = remember { mutableStateOf(0F) }
+
+    val nestedScrollConnection = remember {
+        object : NestedScrollConnection {
+            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                val delta = available.y
+                offset.value += delta
+                offset.value = offset.value.coerceIn(-100F, 100F)
+
+                return Offset.Zero
+            }
+        }
+    }
 
     ModalBottomSheetLayout(
         sheetContent = {
@@ -213,7 +311,7 @@ private fun MainActivityScreenContent(
                     fontStyle = FontStyle.Normal,
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                /*Box(
+                Box(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
@@ -273,7 +371,7 @@ private fun MainActivityScreenContent(
                         )
                     }
                 }
-                Spacer(modifier = Modifier.height(15.dp))*/
+                Spacer(modifier = Modifier.height(15.dp))
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
@@ -332,20 +430,122 @@ private fun MainActivityScreenContent(
                                 number = i.key,
                                 checked = i.value,
                                 onCheckedChange = {
-                                    numbers[i.key] = it
-                                    onWriteNewNumbers(numbers)
+                                    if (it || (!it && numbers.containsValueTimes(true) > 1)) {
+                                        numbers[i.key] = it
+                                        onWriteNewNumbers(numbers)
+                                    } else {
+                                        Toast.makeText(activity, R.string.need_more_than_one_number_text, Toast.LENGTH_SHORT).show()
+                                    }
                                 },
                                 isActive = !ranked,
                             )
                         }
                     }
                 }
+                /*Spacer(modifier = Modifier.height(15.dp))
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.session_restrictions_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Spacer(modifier = Modifier.height(7.dp))
+                    Text(
+                        text = stringResource(id = R.string.amount_of_examples_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Spacer(modifier = Modifier.height(7.dp))
+                        TextCheckbox(text = stringResource(id = R.string.enable_text), isSelected = sessionsSettingsViewModel.amountOfExamplesRestrictionActive.observeAsState().value!!) {
+                            sessionsSettingsViewModel.amountOfExamplesRestrictionActive.value = !sessionsSettingsViewModel.amountOfExamplesRestrictionActive.value!!
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Slider(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .width(300.dp),
+                                value = sessionsSettingsViewModel.amountOfExamplesRestriction.observeAsState().value!!,
+                                onValueChange = { sessionsSettingsViewModel.amountOfExamplesRestriction.value = it },
+                                valueRange = 0.01f..1f,
+                                enabled = sessionsSettingsViewModel.amountOfExamplesRestrictionActive.observeAsState().value!!,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = MaterialTheme.colors.secondary,
+                                    activeTrackColor = MaterialTheme.colors.secondary,
+                                    activeTickColor = MaterialTheme.colors.secondary,
+                                ),
+                            )
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                                text = "${sessionsSettingsViewModel.amountOfExamplesRestriction.observeAsState().value!!.getInStandardIntForm()}",
+                                fontFamily = robotoFontFamily,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontStyle = FontStyle.Normal,
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(7.dp))
+                    Text(
+                        text = stringResource(id = R.string.time_spent_text),
+                        fontFamily = robotoFontFamily,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal,
+                    )
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Spacer(modifier = Modifier.height(7.dp))
+                        TextCheckbox(text = stringResource(id = R.string.enable_text), isSelected = sessionsSettingsViewModel.timerRestrictionActive.observeAsState().value!!) {
+                            sessionsSettingsViewModel.timerRestrictionActive.value = !sessionsSettingsViewModel.timerRestrictionActive.value!!
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Slider(
+                                modifier = Modifier
+                                    .align(Alignment.CenterStart)
+                                    .width(300.dp),
+                                value = sessionsSettingsViewModel.timerRestriction.observeAsState().value!!,
+                                onValueChange = { sessionsSettingsViewModel.timerRestriction.value = it },
+                                valueRange = 0.01f..0.6f,
+                                enabled = sessionsSettingsViewModel.timerRestrictionActive.observeAsState().value!!,
+                                colors = SliderDefaults.colors(
+                                    thumbColor = MaterialTheme.colors.secondary,
+                                    activeTrackColor = MaterialTheme.colors.secondary,
+                                    activeTickColor = MaterialTheme.colors.secondary,
+                                ),
+                            )
+                            Text(
+                                modifier = Modifier.align(Alignment.CenterEnd),
+                                text = "${sessionsSettingsViewModel.timerRestriction.observeAsState().value!!.getInStandardIntForm()}",
+                                fontFamily = robotoFontFamily,
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Normal,
+                                fontStyle = FontStyle.Normal,
+                            )
+                        }
+                    }
+                }*/
             }
         },
         sheetState = bottomState,
     ) {
         Scaffold(
-            modifier = modifier,
+            modifier = modifier.nestedScroll(nestedScrollConnection),
             topBar = {
                 Row(
                     modifier = Modifier
@@ -371,24 +571,42 @@ private fun MainActivityScreenContent(
                 }
             },
             drawerContent = {
-                MainActivityDrawerContent(
-                    screens = screensList,
-                    navController = navController,
-                    drawerState = scaffoldState.drawerState,
-                    username = gpgProfileViewModel.username.observeAsState().value!!,
-                    avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
-                        val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
-                        val canvas = android.graphics.Canvas(bmp)
-                        canvas.drawColor(android.graphics.Color.TRANSPARENT)
-                        bmp
-                    },
-                    rank = gpgProfileViewModel.rank.observeAsState().value!!,
-                    onUserDataDelete = {
-                        gpgProfileViewModel.deleteUserData()
-                    },
-                    logouted = logouted,
-                    onLogoutedChange = { onLogoutedChange(it) },
-                )
+                Box(Modifier.fillMaxSize()) {
+                    MainActivityDrawerContent(
+                        modifier = Modifier.align(Alignment.TopStart),
+                        screens = screensList,
+                        navController = navController,
+                        drawerState = scaffoldState.drawerState,
+                        username = gpgProfileViewModel.username.observeAsState().value!!,
+                        avatar = gpgProfileViewModel.avatar.observeAsState().value ?: run {
+                            val bmp = Bitmap.createBitmap(512, 512, Bitmap.Config.ARGB_8888)
+                            val canvas = android.graphics.Canvas(bmp)
+                            canvas.drawColor(android.graphics.Color.TRANSPARENT)
+                            bmp
+                        },
+                        rank = gpgProfileViewModel.rank.observeAsState().value!!,
+                        onUserDataDelete = {
+                            gpgProfileViewModel.deleteUserData()
+                        },
+                        logouted = logouted,
+                        onLogoutedChange = { onLogoutedChange(it) },
+                    )
+                    Icon(
+                        modifier = Modifier
+                            .size(50.dp)
+                            .padding(start = 12.dp, bottom = 12.dp)
+                            .align(Alignment.BottomStart)
+                            .clickable {
+                                val i = Intent(Intent.ACTION_SEND)
+                                i.type = "text/plain"
+                                i.putExtra(Intent.EXTRA_SUBJECT, activity.resources.getString(R.string.sharing_url_text))
+                                i.putExtra(Intent.EXTRA_TEXT, "${activity.resources.getString(R.string.sharing_text)}\n\nhttps://play.google.com/store/apps/details?id=com.oftatech.superschoolboyremastered")
+                                startActivity(activity, Intent.createChooser(i, activity.resources.getString(R.string.sharing_url_text)), null)
+                            },
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Share app"
+                    )
+                }
             },
             drawerBackgroundColor = MaterialTheme.colors.background,
             drawerShape = RectangleShape,
@@ -422,14 +640,16 @@ private fun MainActivityScreenContent(
                         uiThemeState = uiThemeState,
                         onUIThemeStateChange = onUIThemeStateChange,
                         accentColor = accentColor,
-                        onAccentColorChange = onAccentColorChange
+                        onAccentColorChange = onAccentColorChange,
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.Statistics.route) {
                     StatisticsScreen(
                         modifier = Modifier
                             .padding(paddingValues)
-                            .padding(horizontal = 13.dp), statsViewModel = statsViewModel
+                            .padding(horizontal = 13.dp), statsViewModel = statsViewModel,
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.AdultInfo.route) {
@@ -438,7 +658,8 @@ private fun MainActivityScreenContent(
                         text = Html.fromHtml(
                             stringResource(id = R.string.adult_info_content),
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
-                        )
+                        ),
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.KidsInfo.route) {
@@ -447,7 +668,15 @@ private fun MainActivityScreenContent(
                         text = Html.fromHtml(
                             stringResource(id = R.string.kids_info_content),
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM
-                        )
+                        ),
+                        offset = offset.value,
+                    )
+                }
+                composable(Screen.MultiplicationTable.route) {
+                    ImageScreen(
+                        header = stringResource(id = R.string.multiplication_table),
+                        image = BitmapFactory.decodeResource(activity.resources, R.drawable.multiplication_table).asImageBitmap(),
+                        offset = offset.value,
                     )
                 }
                 composable(Screen.AboutApp.route) {
@@ -458,7 +687,8 @@ private fun MainActivityScreenContent(
                             Html.FROM_HTML_MODE_COMPACT and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST and Html.FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM,
                             null,
                             TextHtmlTagHandler(MaterialTheme.colors.secondary)
-                        )
+                        ),
+                        offset = offset.value,
                     )
                 }
             }
@@ -563,6 +793,7 @@ private fun SettingsScreen(
     onUIThemeStateChange: (UIState) -> Unit,
     accentColor: Color,
     onAccentColorChange: (Color) -> Unit,
+    offset: Float,
 ) {
     Column(
         modifier = modifier
@@ -570,7 +801,7 @@ private fun SettingsScreen(
         horizontalAlignment = Alignment.Start,
         verticalArrangement = Arrangement.Top,
     ) {
-        WindowHeader(text = stringResource(id = R.string.settings_text))
+        WindowHeader(text = stringResource(id = R.string.settings_text), offset = offset)
         Spacer(modifier = Modifier.height(30.dp))
         LazyColumn {
             item {
@@ -702,6 +933,7 @@ private fun SettingsPart(
 private fun StatisticsScreen(
     modifier: Modifier = Modifier,
     statsViewModel: StatisticsViewModel,
+    offset: Float,
 ) {
     statsViewModel.updateStatsData()
 
@@ -712,7 +944,8 @@ private fun StatisticsScreen(
         verticalArrangement = Arrangement.Top,
     ) {
         WindowHeader(
-            text = stringResource(id = R.string.statistics_text)
+            text = stringResource(id = R.string.statistics_text),
+            offset = offset
         )
         when (statsViewModel.isEmpty()) {
             true -> PlugScreen()
@@ -822,6 +1055,7 @@ private fun TextScreen(
     modifier: Modifier = Modifier,
     header: String,
     text: Spanned,
+    offset: Float,
 ) {
     val scrollState = rememberScrollState()
     val onBackground = MaterialTheme.colors.onBackground.toOldColor()
@@ -848,7 +1082,7 @@ private fun TextScreen(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
-        WindowHeader(text = header)
+        WindowHeader(text = header, offset = offset)
         Spacer(modifier = Modifier.height(30.dp))
         AndroidView(modifier = Modifier.verticalScroll(scrollState),
             factory = {
@@ -864,6 +1098,30 @@ private fun TextScreen(
     }
 }
 
+@Composable
+private fun ImageScreen(
+    modifier: Modifier = Modifier,
+    header: String,
+    image: ImageBitmap,
+    offset: Float,
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .padding(horizontal = 13.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        WindowHeader(text = header, offset = offset)
+        Spacer(modifier = Modifier.height(30.dp))
+        Image(modifier = Modifier
+            .align(Alignment.CenterHorizontally)
+            .verticalScroll(scrollState), bitmap = image, contentDescription = header)
+    }
+}
+
 sealed class Screen(
     val route: String,
     val drawerImage: ImageVector,
@@ -876,11 +1134,13 @@ sealed class Screen(
         Screen("adult_info", Icons.Outlined.EscalatorWarning, R.string.info_for_adults)
 
     object KidsInfo : Screen("kids_info", Icons.Outlined.ChildCare, R.string.info_for_kids)
+    object MultiplicationTable : Screen("multiplication_table", Icons.Outlined.Calculate, R.string.multiplication_table)
     object AboutApp : Screen("app_info", Icons.Outlined.Info, R.string.about_app)
 }
 
 private fun openTrainingActivity(context: Context) {
     FirebaseAnalytics.getInstance(context).logEvent("training_session_start", null)
+    YandexMetrica.reportEvent("training_session_start")
     context.startActivity(Intent(context, TrainingActivity::class.java))
 }
 
@@ -902,7 +1162,7 @@ private fun MainActivityDrawerContent(
 
     LazyColumn(
         modifier = modifier
-            .fillMaxSize(),
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {

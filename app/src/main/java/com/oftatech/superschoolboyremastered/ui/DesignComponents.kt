@@ -3,6 +3,8 @@ package com.oftatech.superschoolboyremastered.ui
 import android.app.Activity
 import android.graphics.Bitmap
 import android.util.DisplayMetrics
+import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -111,14 +113,17 @@ fun SecondaryTextButton(
 fun WindowHeader(
     modifier: Modifier = Modifier,
     text: String,
+    offset: Float,
 ) {
+    var coefficient = 100F//remember { mutableStateOf(100F) }
+    coefficient = (coefficient + offset).coerceIn(50F, 100F)
     Text(
         modifier = modifier,
         text = text,
         fontFamily = robotoFontFamily,
         fontWeight = FontWeight.Bold,
         fontStyle = FontStyle.Normal,
-        fontSize = 48.sp,
+        fontSize = animateFloatAsState(48 * (coefficient/100)).value.sp,
     )
 }
 
@@ -150,11 +155,51 @@ fun TextRadioButton(
                             alpha = LocalContentAlpha.current
                         )
                     )
-                    .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
                         actionOnClick()
                     }
             )
         }
+        Spacer(modifier = Modifier.width(14.dp))
+        Text(
+            modifier = Modifier
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) {
+                    actionOnClick()
+                },
+            text = text,
+            fontFamily = robotoFontFamily,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            fontStyle = FontStyle.Normal,
+        )
+    }
+}
+
+@Composable
+fun TextCheckbox(
+    modifier: Modifier = Modifier,
+    text: String,
+    isSelected: Boolean,
+    actionOnClick: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+            ) {
+                actionOnClick()
+            },
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Checkbox(checked = isSelected, onCheckedChange = { actionOnClick() })
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             modifier = Modifier

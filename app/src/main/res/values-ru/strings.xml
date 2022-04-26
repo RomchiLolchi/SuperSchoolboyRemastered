@@ -81,7 +81,7 @@
         v0.1pr
     </string>
     <string name="back_text">Назад</string>
-    <string name="timer_text">Таймер</string>
+    <string name="timer_text">Максимальное время на ответ</string>
     <string name="right_answers_text">Правильные ответы</string>
     <string name="wrong_answers_text">Неправильные ответы</string>
     <string name="user_avatar_text">Аватар пользователя</string>
@@ -99,5 +99,36 @@
     <string name="ranked_text">Рейтинговые</string>
     <string name="session_settings">Настройки сессии</string>
     <string name="difficulty_text">Сложность</string>
-    <string name="numbers_text">Цифры</string>
+    <string name="numbers_text">Таблицы умножения на</string>
+    <string name="need_more_than_one_number_text">Как минимум одна цифра должна быть выбрана</string>
+    <string name="multiplication_table">Таблица умножения</string>
+    <string name="answer_is_too_big_text">Сомневаюсь что правильный ответ будет таким длинным</string>
+    <string-array name="good_results_final_texts">
+        <item>Хорошая работа!</item>
+        <item>Ты отлично справился!</item>
+        <item>Так держать!</item>
+        <item>Прекрасно!</item>
+    </string-array>
+    <string-array name="average_results_final_texts">
+        <item>Неплохо!</item>
+        <item>У тебя хорошо получается</item>
+    </string-array>
+    <string-array name="bad_results_final_texts">
+        <item>Попрактикуйся побольше…</item>
+        <item>Не сдавайся!</item>
+        <item>Не унывай!</item>
+        <item>Повтори таблицу умножения</item>
+    </string-array>
+    <string name="awful_result_final_text">0 правильных ответов… Мощно…</string>
+    <string name="restart_text">Повторить</string>
+    <string name="close_text">Закрыть</string>
+    <string name="to_statistics_text">В статистику</string>
+    <string name="session_restrictions_text">Ограничения сессий</string>
+    <string name="amount_of_examples_text">Максимальное количество примеров</string>
+    <string name="time_spent_text">Потраченное время</string>
+    <string name="value_between_text">Значение должно быть между</string>
+    <string name="and_text">и</string>
+    <string name="enable_text">Включить</string>
+    <string name="sharing_url_text">Отправка ссылки</string>
+    <string name="sharing_text">Скачайте "Супер Школяр Remastered" уже сегодня!</string>
 </resources>

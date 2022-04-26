@@ -1,5 +1,6 @@
 package com.oftatech.superschoolboyremastered.activity
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.os.Bundle
@@ -49,9 +50,16 @@ import com.oftatech.superschoolboyremastered.util.Utils.appSetup
 import com.oftatech.superschoolboyremastered.viewmodel.*
 import dagger.hilt.android.AndroidEntryPoint
 import com.oftatech.superschoolboyremastered.viewmodel.SessionsSettingsViewModel.Companion.getInStandardIntForm
+import com.yandex.metrica.impl.ob.va
+import java.util.*
 
 @AndroidEntryPoint
 class TrainingActivity : ComponentActivity() {
+
+    companion object {
+        var restrictionTimer = Timer()
+        var examplesAmountRestriction = -1
+    }
 
     private val statsViewModel by viewModels<StatisticsViewModel>()
     private val trainingViewModel by viewModels<TrainingViewModel>() { object : ViewModelProvider.Factory {
@@ -59,13 +67,16 @@ class TrainingActivity : ComponentActivity() {
             return TrainingViewModel(application as Application) as T
         }
     } }
+    private val sessionSettingsViewModel by viewModels<SessionsSettingsViewModel>()
 
+    @SuppressLint("ApplySharedPref")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         trainingViewModel.updateValuesFromSettings()
 
         val mainViewModel by viewModels<MainViewModel>()
+        checkAndApplyRestrictions()
         setContent {
             MainAppContent(
                 darkTheme = Utils.isDarkTheme(mainViewModel.appTheme.observeAsState().value!!),
@@ -89,7 +100,7 @@ class TrainingActivity : ComponentActivity() {
                         trainingViewModel.clearUserAnswer()
                     },
                     actionOnSubmitPressed = {
-                        trainingViewModel.completeTask()
+                        trainingViewModel.completeTask(activity = this, restriction = examplesAmountRestriction)
                     },
                     rightAnswersIconTint = if (trainingViewModel.isRightAnswersIconTintStandard.observeAsState().value == true) {
                         animateColorAsState(targetValue = standardColor)
@@ -102,15 +113,56 @@ class TrainingActivity : ComponentActivity() {
                         animateColorAsState(targetValue = Red)
                     }.value,
                 )
+                if (trainingViewModel.showEndingDialog.observeAsState().value == true) {
+                    trainingViewModel.showEndingDialog(
+                        onBackPressed = {
+                            trainingViewModel.showEndingDialog.value = false
+                            super.onBackPressed()
+                        },
+                        restartTraining = {
+                            finish()
+                            overridePendingTransition(0, 0)
+                            startActivity(intent)
+                            overridePendingTransition(0, 0)
+                        },
+                        goToStatistics = {
+                            applicationContext.getSharedPreferences("open", Activity.MODE_PRIVATE).edit().putBoolean("open", true).commit()
+                            super.onBackPressed()
+                        },
+                    )
+                }
             }
-            trainingViewModel.completeTask(check = false)
+            trainingViewModel.completeTask(check = false, activity = this, restriction = examplesAmountRestriction)
         }
     }
 
     override fun onBackPressed() {
-        trainingViewModel.stop()
-        statsViewModel.writeStatsData(trainingViewModel)
-        super.onBackPressed()
+        with(restrictionTimer) {
+            cancel()
+            purge()
+        }
+        if (sessionSettingsViewModel.ranked.value!!) {
+            trainingViewModel.sendResultsToLeaderboard(trainingViewModel.rightAnswersInRow.value!!.toLong())
+        }
+        runOnUiThread {
+            trainingViewModel.stop()
+            statsViewModel.writeStatsData(trainingViewModel)
+
+            trainingViewModel.showEndingDialog.value = true
+        }
+    }
+
+    private fun checkAndApplyRestrictions() {
+        if (sessionSettingsViewModel.amountOfExamplesRestrictionActive.value!!) {
+            examplesAmountRestriction = sessionSettingsViewModel.amountOfExamplesRestriction.value!!.getInStandardIntForm()
+        }
+        if (sessionSettingsViewModel.timerRestrictionActive.value!!) {
+            restrictionTimer.schedule(object : TimerTask() {
+                override fun run() {
+                    onBackPressed()
+                }
+            }, sessionSettingsViewModel.timerRestriction.value!!.getInStandardIntForm() * 60000L)
+        }
     }
 }
 
@@ -271,7 +323,9 @@ private fun StatsBar(
             modifier = Modifier.fillMaxWidth(),
         ) {
             Row(
-                modifier = Modifier.align(Alignment.CenterStart).padding(start = 20.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -314,7 +368,9 @@ private fun StatsBar(
             }
 
             Row(
-                modifier = Modifier.align(Alignment.CenterEnd).padding(end = 20.dp),
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
